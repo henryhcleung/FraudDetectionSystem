@@ -1,0 +1,9 @@
+echo "/target/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+*.iml
+.idea/
+*.swp" > .gitignore

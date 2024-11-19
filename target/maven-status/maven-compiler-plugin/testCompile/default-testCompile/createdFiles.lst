@@ -1,0 +1,5 @@
+com/binance/repository/TransactionRepositoryTest.class
+com/binance/service/CycleDetectionServiceTest.class
+com/binance/controller/CycleDetectionController.class
+com/binance/integration/CycleDetectionIntegrationTest.class
+com/binance/integration/LoginIntegrationTest.class
