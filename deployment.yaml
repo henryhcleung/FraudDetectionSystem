@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-detection-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fraud-detection-system
+  template:
+    metadata:
+      labels:
+        app: fraud-detection-system
+    spec:
+      containers:
+      - name: fraud-detection-system
+        image: your-dockerhub-username/frauddetectionsystem:latest
+        ports:
+        - containerPort: 8080
