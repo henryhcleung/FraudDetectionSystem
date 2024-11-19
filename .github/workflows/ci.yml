@@ -38,4 +38,16 @@ jobs:
         subject: Build Notification
         to: henryleungdemotest@gmail.com
         from: github-actions@gmail.com
-        body: The build has completed. Please check the logs for details.
+        body: |
+          Build Notification
+
+          The build has completed successfully.
+
+          **Repository**: ${{ github.repository }}
+          **Branch**: ${{ github.ref }}
+          **Commit**: ${{ github.sha }}
+          **Commit Message**: ${{ github.event.head_commit.message }}
+          **Author**: ${{ github.event.head_commit.author.name }}
+          **Build URL**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Please check the logs for more details.
