@@ -34,7 +34,8 @@ jobs:
         run: ls -l target/
 
       - name: Debug: List all files in the project directory
-        run: find . -type f
+        run: |
+          find . -type f
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest .
