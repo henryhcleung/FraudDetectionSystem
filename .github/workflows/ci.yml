@@ -31,7 +31,7 @@ jobs:
       run: mvn test
 
     - name: Verify JAR file exists
-      run: ls -l target/FraudDetectionSystem.jar
+      run: ls -l target/
 
     - name: Build Docker image
       run: docker build -t ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest .
@@ -42,19 +42,15 @@ jobs:
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest
 
-    - name: Deploy to Kubernetes
-      uses: azure/k8s-deploy@v1
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
       with:
-        manifests: |
-          deployment.yaml
-          service.yaml
-        images: |
-          ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest
-        kubectl-version: 'latest'
-        namespace: default
-        cluster-name: your-cluster-name
-        resource-group: your-resource-group
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
+        version: 'latest'
+
+    - name: Deploy to local Kubernetes cluster
+      run: |
+        kubectl apply -f deployment.yaml
+        kubectl apply -f service.yaml
 
   notify:
     runs-on: ubuntu-latest
