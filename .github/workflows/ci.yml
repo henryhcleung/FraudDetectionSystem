@@ -29,14 +29,14 @@ jobs:
       run: mvn test
 
     - name: Send email notification
-      if: failure()
+      # Temporarily remove the condition to always run this step
       uses: dawidd6/action-send-mail@v3  # Ensure you are using the latest version
       with:
         server_address: smtp.gmail.com
         server_port: 587
         username: ${{ secrets.SMTP_USERNAME }}
         password: ${{ secrets.SMTP_PASSWORD }}
-        subject: Build Failed
+        subject: Build Notification
         to: henryleungdemotest@gmail.com
         from: github-actions@gmail.com
-        body: The build has failed. Please check the logs for details.
+        body: The build has completed. Please check the logs for details.
