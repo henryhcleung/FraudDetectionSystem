@@ -29,7 +29,6 @@ jobs:
       run: mvn test
 
     - name: Send email notification
-      # Temporarily remove the condition to always run this step
       uses: dawidd6/action-send-mail@v3  # Ensure you are using the latest version
       with:
         server_address: smtp.gmail.com
