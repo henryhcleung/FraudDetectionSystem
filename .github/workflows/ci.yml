@@ -27,6 +27,9 @@ jobs:
     - name: Build with Maven
       run: mvn clean package
 
+    - name: Verify JAR file exists
+      run: ls -l target/FraudDetectionSystem.jar
+
     - name: Build Docker image
       run: docker build -t your-dockerhub-username/frauddetectionsystem:latest .
 
@@ -49,3 +52,22 @@ jobs:
         cluster-name: your-cluster-name
         resource-group: your-resource-group
         credentials: ${{ secrets.AZURE_CREDENTIALS }}
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: build
+    if: failure()
+    steps:
+    - name: Send email notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.example.com
+        server_port: 587
+        username: ${{ secrets.SMTP_USERNAME }}
+        password: ${{ secrets.SMTP_PASSWORD }}
+        subject: Build Failed: ${{ github.repository }}
+        body: |
+          The build for the repository ${{ github.repository }} has failed.
+          Please check the details at ${{ github.run_url }}.
+        to: team@example.com
+        from: ci@example.com
