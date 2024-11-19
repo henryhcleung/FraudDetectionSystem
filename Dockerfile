@@ -1,7 +1,7 @@
 # Use an official OpenJDK runtime as a parent image
 FROM openjdk:11-jre-slim
 
-# Set the working directory
+# Set the working directory in the container
 WORKDIR /app
 
 # Copy the application JAR file to the container
@@ -11,4 +11,4 @@ COPY target/FraudDetectionSystem.jar /app/FraudDetectionSystem.jar
 EXPOSE 8080
 
 # Run the application
-CMD ["java", "-jar", "FraudDetectionSystem.jar"]
+ENTRYPOINT ["java", "-jar", "/app/FraudDetectionSystem.jar"]
