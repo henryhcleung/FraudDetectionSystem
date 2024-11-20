@@ -25,9 +25,7 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build and test
-        run: |
-          mvn -B clean package --file pom.xml -s custom-settings.xml
-          mvn test -s custom-settings.xml
+        run: ./scripts/build.sh
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -85,10 +83,11 @@ jobs:
       - name: Set up Minikube
         uses: medyagh/setup-minikube@master
       - name: Deploy to local Kubernetes
-        run: |
-          minikube start --memory=4096 --cpus=2
-          kubectl apply -f k8s/
-          kubectl set image deployment/fraud-detection-system fraud-detection-system=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: ./scripts/deploy.sh
       - name: Wait for deployment
         run: |
           echo "Waiting for deployment to be ready..."
@@ -98,28 +97,9 @@ jobs:
           kubectl get deployments,pods,services
           kubectl describe pods
           kubectl logs -l app=fraud-detection-system --all-containers=true --tail=100
-          kubectl get events --sort-by=.metadata.creationTimestamp
-      - name: Check for failed pods
-        run: |
-          FAILED_PODS=$(kubectl get pods --field-selector=status.phase!=Running -o jsonpath='{.items[*].metadata.name}')
-          if [ -n "$FAILED_PODS" ]; then
-            echo "Failed pods found: $FAILED_PODS"
-            for pod in $FAILED_PODS; do
-              kubectl describe pod $pod
-              kubectl logs $pod --all-containers=true --previous
-            done
-            exit 1
-          else
-            echo "No failed pods found."
-          fi
-      - name: Wait for service
-        run: |
-          echo "Waiting for service to be available..."
-          timeout 300s bash -c 'until minikube service fraud-detection-system --url; do sleep 5; done'
-          SERVICE_URL=$(minikube service fraud-detection-system --url)
-          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
       - name: Test service
         run: |
+          SERVICE_URL=$(minikube service fraud-detection-system --url)
           echo "Testing service at $SERVICE_URL"
           curl -v $SERVICE_URL || echo "Service not responding"
       - name: Set up Node.js
@@ -159,11 +139,11 @@ jobs:
 
             The build has failed in the ${{ github.workflow }} workflow.
 
-            **Repository**: ${{ github.repository }}
-            **Branch**: ${{ github.ref }}
-            **Commit**: ${{ github.sha }}
-            **Commit Message**: ${{ github.event.head_commit.message }}
-            **Author**: ${{ github.event.head_commit.author.name }}
-            **Build URL**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            Commit Message: ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+            Build URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             Please check the logs for more details.
