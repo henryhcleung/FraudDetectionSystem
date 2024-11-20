@@ -31,7 +31,7 @@ jobs:
           mvn -B clean package --file pom.xml -s custom-settings.xml
           mvn test -s custom-settings.xml
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: FraudDetectionSystem
           path: target/FraudDetectionSystem-*.jar
@@ -48,7 +48,7 @@ jobs:
           path: '.'
           format: 'HTML'
       - name: Upload OWASP Dependency-Check report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
           path: ${{github.workspace}}/reports
@@ -57,6 +57,12 @@ jobs:
     needs: [build-and-test, security-scan]
     runs-on: ubuntu-latest
     steps:
+      - name: Check Jenkins configuration
+        run: |
+          if [ -z "$JENKINS_URL" ] || [ -z "$JENKINS_USER" ] || [ -z "$JENKINS_TOKEN" ]; then
+            echo "Error: Jenkins configuration is incomplete. Please set JENKINS_URL, JENKINS_USER, and JENKINS_TOKEN in your GitHub secrets."
+            exit 1
+          fi
       - name: Trigger Jenkins job
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${JENKINS_URL}/job/complex-build/build" \
