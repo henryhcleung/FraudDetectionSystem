@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+ame: CI/CD Pipeline
 
 on:
   push:
@@ -66,6 +66,9 @@ jobs:
 
       - name: Run integration tests
         run: mvn verify
+
+      - name: List tests directory contents
+        run: ls -l tests/
 
       - name: Run end-to-end tests
         run: |
