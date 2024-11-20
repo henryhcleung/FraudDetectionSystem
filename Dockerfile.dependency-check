@@ -1,0 +1,5 @@
+FROM openjdk:11-jre-slim
+RUN apt-get update && apt-get install -y wget unzip
+RUN wget https://github.com/jeremylong/DependencyCheck/releases/download/v11.1.0/dependency-check-11.1.0-release.zip
+RUN unzip dependency-check-11.1.0-release.zip -d /opt
+ENV PATH="/opt/dependency-check/bin:${PATH}"
