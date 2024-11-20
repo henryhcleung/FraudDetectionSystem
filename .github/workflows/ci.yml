@@ -11,9 +11,6 @@ on:
 env:
   JAVA_VERSION: '11'
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem
-  JENKINS_URL: ${{ secrets.JENKINS_URL }}
-  JENKINS_USER: ${{ secrets.JENKINS_USER }}
-  JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
 
 jobs:
   build-and-test:
@@ -53,54 +50,16 @@ jobs:
           name: dependency-check-report
           path: ${{github.workspace}}/reports
 
-  jenkins-integration:
+  docker-build-push:
     needs: [build-and-test, security-scan]
     runs-on: ubuntu-latest
     steps:
-      - name: Check Jenkins configuration
-        run: |
-          if [ -z "$JENKINS_URL" ] || [ -z "$JENKINS_USER" ] || [ -z "$JENKINS_TOKEN" ]; then
-            echo "Warning: Jenkins configuration is incomplete. Skipping Jenkins integration."
-            echo "To enable Jenkins integration, set JENKINS_URL, JENKINS_USER, and JENKINS_TOKEN in your GitHub secrets."
-            exit 0
-          fi
-      - name: Trigger Jenkins job
-        if: env.JENKINS_URL != '' && env.JENKINS_USER != '' && env.JENKINS_TOKEN != ''
-        run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${JENKINS_URL}/job/complex-build/build" \
-            --user "${JENKINS_USER}:${JENKINS_TOKEN}" \
-            --data-urlencode json='{"parameter": [{"name":"BRANCH", "value":"${{ github.ref }}"}]}')
-          if [ "$response" != "201" ]; then
-            echo "Failed to trigger Jenkins job. HTTP status: $response"
-            exit 1
-          fi
-      - name: Wait for Jenkins job completion
-        if: env.JENKINS_URL != '' && env.JENKINS_USER != '' && env.JENKINS_TOKEN != ''
-        run: |
-          max_attempts=30
-          attempt=0
-          while [ $attempt -lt $max_attempts ]; do
-            status=$(curl -s "${JENKINS_URL}/job/complex-build/lastBuild/api/json" \
-              --user "${JENKINS_USER}:${JENKINS_TOKEN}" | jq -r '.result')
-            if [ "$status" = "SUCCESS" ]; then
-              echo "Jenkins job completed successfully"
-              exit 0
-            elif [ "$status" = "FAILURE" ] || [ "$status" = "ABORTED" ]; then
-              echo "Jenkins job failed or was aborted"
-              exit 1
-            fi
-            attempt=$((attempt+1))
-            sleep 20
-          done
-          echo "Timeout waiting for Jenkins job completion"
-          exit 1
-
-  docker-build-push:
-    needs: [build-and-test, security-scan, jenkins-integration]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
       - uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: FraudDetectionSystem
+          path: target
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -127,7 +86,7 @@ jobs:
         uses: azure/setup-kubectl@v3
       - name: Deploy to staging
         run: |
-          kubectl apply -f k8s/staging/
+          kubectl apply -f deployment.yaml
           kubectl set image deployment/frauddetection frauddetection=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
   integration-tests:
@@ -138,7 +97,7 @@ jobs:
       - name: Run integration tests
         run: |
           npm install -g newman
-          newman run tests/integration-tests.json
+          newman run tests/postman_collection.json
 
   deploy-production:
     needs: integration-tests
@@ -150,7 +109,7 @@ jobs:
         uses: azure/setup-kubectl@v3
       - name: Deploy to production
         run: |
-          kubectl apply -f k8s/production/
+          kubectl apply -f deployment.yaml
           kubectl set image deployment/frauddetection frauddetection=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
   notify:
@@ -158,7 +117,6 @@ jobs:
     needs: 
       - build-and-test
       - security-scan
-      - jenkins-integration
       - docker-build-push
       - deploy-staging
       - integration-tests
