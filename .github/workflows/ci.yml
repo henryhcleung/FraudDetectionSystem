@@ -11,9 +11,8 @@ on:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,14 +26,94 @@ jobs:
       - name: Build with Maven
         run: mvn clean install
 
-      - name: List target directory contents
-        run: ls -l target/
-
-      - name: List all files in the project directory
-        run: find . -type f
-
       - name: Verify JAR file exists
         run: test -f target/FraudDetectionSystem-1.0-SNAPSHOT.jar && echo "JAR file exists" || echo "JAR file does not exist"
+
+  jenkins-jobs:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker-practice/actions-setup-docker@master
+
+      - name: Run Jenkins in Docker
+        run: |
+          docker run -d -p 8080:8080 -p 50000:50000 --name jenkins jenkins/jenkins:lts
+          # Wait for Jenkins to start
+          until $(curl --output /dev/null --silent --head --fail http://localhost:8080); do
+            printf '.'
+            sleep 5
+          done
+
+      - name: Get Jenkins initial admin password
+        run: |
+          JENKINS_PASSWORD=$(docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword)
+          echo "JENKINS_PASSWORD=$JENKINS_PASSWORD" >> $GITHUB_ENV
+
+      - name: Install Jenkins plugins
+        run: |
+          docker exec jenkins jenkins-plugin-cli --plugins workflow-aggregator git
+
+      - name: Create Jenkins jobs
+        run: |
+          # Create complex-build job
+          curl -X POST 'http://localhost:8080/createItem?name=complex-build' \
+            --user "admin:${{ env.JENKINS_PASSWORD }}" \
+            --header "Content-Type: application/xml" \
+            --data-binary @jenkins-jobs/complex-build.xml
+
+          # Create legacy-integration job
+          curl -X POST 'http://localhost:8080/createItem?name=legacy-integration' \
+            --user "admin:${{ env.JENKINS_PASSWORD }}" \
+            --header "Content-Type: application/xml" \
+            --data-binary @jenkins-jobs/legacy-integration.xml
+
+          # Create security-scan job
+          curl -X POST 'http://localhost:8080/createItem?name=security-scan' \
+            --user "admin:${{ env.JENKINS_PASSWORD }}" \
+            --header "Content-Type: application/xml" \
+            --data-binary @jenkins-jobs/security-scan.xml
+
+      - name: Run Jenkins jobs
+        run: |
+          # Run complex-build job
+          curl -X POST 'http://localhost:8080/job/complex-build/build' \
+            --user "admin:${{ env.JENKINS_PASSWORD }}"
+          
+          # Run legacy-integration job
+          curl -X POST 'http://localhost:8080/job/legacy-integration/build' \
+            --user "admin:${{ env.JENKINS_PASSWORD }}"
+          
+          # Run security-scan job
+          curl -X POST 'http://localhost:8080/job/security-scan/build' \
+            --user "admin:${{ env.JENKINS_PASSWORD }}"
+
+      - name: Wait for Jenkins jobs to complete
+        run: |
+          for job in complex-build legacy-integration security-scan; do
+            while true; do
+              STATUS=$(curl -s "http://localhost:8080/job/$job/lastBuild/api/json" \
+                --user "admin:${{ env.JENKINS_PASSWORD }}" | jq -r '.result')
+              if [ "$STATUS" = "SUCCESS" ]; then
+                echo "$job completed successfully"
+                break
+              elif [ "$STATUS" = "FAILURE" ]; then
+                echo "$job failed"
+                exit 1
+              fi
+              sleep 10
+            done
+          done
+
+  docker-build-push:
+    needs: jenkins-jobs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest .
@@ -45,37 +124,25 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest
 
-      - name: Install kind
-        run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
-
-      - name: Create Kubernetes cluster
-        run: kind create cluster --wait 5m
+  deploy-and-test:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
         with:
           version: 'latest'
 
-      - name: Deploy to local Kubernetes cluster
+      - name: Deploy to Kubernetes
         run: |
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
 
       - name: Run integration tests
         run: mvn verify
-
-      - name: Start application server
-        run: |
-          nohup java -jar target/FraudDetectionSystem-1.0-SNAPSHOT.jar &
-
-      - name: Wait for server to start
-        run: sleep 30
-
-      - name: List tests directory contents
-        run: ls -l tests/
 
       - name: Run end-to-end tests
         run: |
@@ -84,7 +151,7 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
-    needs: build
+    needs: deploy-and-test
     if: failure()
     steps:
       - name: Send email notification
