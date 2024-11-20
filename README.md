@@ -1,3 +1,12 @@
+# FraudDetectionSystem
+
+## Overview
+
+The FraudDetectionSystem is a Java-based microservices application designed to detect cycles in linked lists and manage transactions. It uses Spring Boot for the backend and provides a web interface for user interaction. The system is designed to be scalable and maintainable, leveraging Kubernetes for deployment and GitHub Actions for CI/CD.
+
+## Project Structure
+
+```
 FRAUDDETECTIONSYSTEM
 ├── src
 │   ├── main
