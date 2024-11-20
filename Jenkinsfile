@@ -1,9 +1,12 @@
 pipeline {
-    agent any
-    
+    agent { label 'microservices' } 
+
     environment {
         JAVA_VERSION = '11'
         DOCKER_IMAGE = "${env.DOCKER_USERNAME}/frauddetectionsystem"
+
+        NODE_ENV = 'production'
+        DEPLOY_ENV = 'staging'
     }
     
     stages {
