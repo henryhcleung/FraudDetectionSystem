@@ -76,41 +76,35 @@ jobs:
           cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,mode=max
 
-  deploy-staging:
+  deploy-local-k8s:
     needs: docker-build-push
     runs-on: ubuntu-latest
-    environment: staging
     steps:
       - uses: actions/checkout@v4
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-      - name: Deploy to staging
+      - name: Set up Minikube
+        uses: medyagh/setup-minikube@master
+      - name: Deploy to local Kubernetes
         run: |
+          minikube start
           kubectl apply -f deployment.yaml
-          kubectl set image deployment/frauddetection frauddetection=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+          kubectl apply -f service.yaml
+          kubectl set image deployment/fraud-detection-system fraud-detection-system=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+          minikube service fraud-detection-system --url
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/fraud-detection-system
+          kubectl get pods
 
   integration-tests:
-    needs: deploy-staging
+    needs: deploy-local-k8s
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Run integration tests
         run: |
           npm install -g newman
-          newman run tests/postman_collection.json
-
-  deploy-production:
-    needs: integration-tests
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-      - name: Deploy to production
-        run: |
-          kubectl apply -f deployment.yaml
-          kubectl set image deployment/frauddetection frauddetection=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+          SERVICE_URL=$(minikube service fraud-detection-system --url)
+          newman run tests/postman_collection.json --env-var "baseUrl=$SERVICE_URL"
 
   notify:
     if: failure()
@@ -118,9 +112,8 @@ jobs:
       - build-and-test
       - security-scan
       - docker-build-push
-      - deploy-staging
+      - deploy-local-k8s
       - integration-tests
-      - deploy-production
     runs-on: ubuntu-latest
     steps:
       - name: Send email notification
