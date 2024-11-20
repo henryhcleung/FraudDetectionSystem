@@ -70,7 +70,7 @@ jobs:
       - name: Run end-to-end tests
         run: |
           npm install -g newman
-          newman run path/to/your/postman_collection.json
+          newman run postman_collection.json
 
   notify:
     runs-on: ubuntu-latest
