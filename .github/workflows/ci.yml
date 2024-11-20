@@ -85,8 +85,6 @@ jobs:
       - name: Deploy to local Kubernetes
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: ./scripts/deploy.sh
       - name: Wait for deployment
         run: |

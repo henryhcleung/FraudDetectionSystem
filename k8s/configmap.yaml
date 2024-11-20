@@ -4,4 +4,3 @@ metadata:
   name: fraud-detection-config
 data:
   SPRING_PROFILES_ACTIVE: "production"
-  DATABASE_URL: "jdbc:mysql://localhost:3306/frauddetection"

@@ -8,11 +8,6 @@ IMAGE_TAG=${GITHUB_SHA:-latest}
 echo "Starting Minikube..."
 minikube start --memory=4096 --cpus=2
 
-echo "Creating database secrets..."
-kubectl create secret generic db-secrets \
-    --from-literal=username=$DB_USERNAME \
-    --from-literal=password=$DB_PASSWORD
-
 echo "Applying Kubernetes manifests..."
 sed -e "s|\${DOCKER_USERNAME}|$DOCKER_USERNAME|g" \
     -e "s|\${IMAGE_TAG}|$IMAGE_TAG|g" \

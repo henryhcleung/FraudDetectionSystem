@@ -45,18 +45,3 @@ spec:
           value: "production"
         - name: JAVA_OPTS
           value: "-Xmx512m -Xms256m"
-        - name: DATABASE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: fraud-detection-config
-              key: DATABASE_URL
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: username
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: password

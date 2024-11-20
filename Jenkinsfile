@@ -32,12 +32,7 @@ pipeline {
         
         stage('Deploy and Test') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'db-username', variable: 'DB_USERNAME'),
-                    string(credentialsId: 'db-password', variable: 'DB_PASSWORD')
-                ]) {
-                    sh './scripts/deploy.sh'
-                }
+                sh './scripts/deploy.sh'
             }
         }
     }
