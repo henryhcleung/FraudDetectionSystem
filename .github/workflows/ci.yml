@@ -85,7 +85,7 @@ jobs:
         uses: medyagh/setup-minikube@master
       - name: Deploy to local Kubernetes
         run: |
-          minikube start
+          minikube start --memory=2048 --cpus=2
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
           kubectl set image deployment/fraud-detection-system fraud-detection-system=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
@@ -99,8 +99,27 @@ jobs:
           kubectl get deployments
           echo "Pod status:"
           kubectl get pods
+          echo "Detailed pod description:"
+          kubectl describe pods
           echo "Pod logs:"
-          kubectl logs -l app=fraud-detection-system
+          kubectl logs -l app=fraud-detection-system --all-containers=true --tail=100
+          echo "Events:"
+          kubectl get events --sort-by=.metadata.creationTimestamp
+      - name: Check for failed pods
+        run: |
+          FAILED_PODS=$(kubectl get pods --field-selector=status.phase!=Running -o jsonpath='{.items[*].metadata.name}')
+          if [ -n "$FAILED_PODS" ]; then
+            echo "Failed pods found: $FAILED_PODS"
+            for pod in $FAILED_PODS; do
+              echo "Describing failed pod: $pod"
+              kubectl describe pod $pod
+              echo "Logs for failed pod: $pod"
+              kubectl logs $pod --all-containers=true --previous
+            done
+            exit 1
+          else
+            echo "No failed pods found."
+          fi
       - name: Wait for service
         run: |
           echo "Waiting for service to be available..."
