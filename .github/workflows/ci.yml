@@ -67,6 +67,13 @@ jobs:
       - name: Run integration tests
         run: mvn verify
 
+      - name: Start application server
+        run: |
+          nohup java -jar target/FraudDetectionSystem-1.0-SNAPSHOT.jar &
+
+      - name: Wait for server to start
+        run: sleep 30
+
       - name: List tests directory contents
         run: ls -l tests/
 
