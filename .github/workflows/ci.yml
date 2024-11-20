@@ -89,11 +89,33 @@ jobs:
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
           kubectl set image deployment/fraud-detection-system fraud-detection-system=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-          minikube service fraud-detection-system --url
       - name: Wait for deployment
         run: |
-          kubectl rollout status deployment/fraud-detection-system
+          echo "Waiting for deployment to be ready..."
+          kubectl rollout status deployment/fraud-detection-system --timeout=300s
+          echo "Deployment status:"
+          kubectl get deployments
+          echo "Pod status:"
           kubectl get pods
+          echo "Describing pods:"
+          kubectl describe pods
+      - name: Check service
+        run: |
+          echo "Checking service status..."
+          kubectl get services
+          echo "Describing service:"
+          kubectl describe service fraud-detection-system
+      - name: Wait for service
+        run: |
+          echo "Waiting for service to be available..."
+          timeout 300s bash -c 'while [[ -z $(minikube service fraud-detection-system --url) ]]; do sleep 5; done'
+          SERVICE_URL=$(minikube service fraud-detection-system --url)
+          echo "Service URL: $SERVICE_URL"
+      - name: Test service
+        run: |
+          SERVICE_URL=$(minikube service fraud-detection-system --url)
+          echo "Testing service at $SERVICE_URL"
+          curl -v $SERVICE_URL
 
   integration-tests:
     needs: deploy-local-k8s
@@ -104,6 +126,7 @@ jobs:
         run: |
           npm install -g newman
           SERVICE_URL=$(minikube service fraud-detection-system --url)
+          echo "Running tests against $SERVICE_URL"
           newman run tests/postman_collection.json --env-var "baseUrl=$SERVICE_URL"
 
   notify:
