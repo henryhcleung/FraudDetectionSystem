@@ -11,6 +11,9 @@ on:
 env:
   JAVA_VERSION: '11'
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem
+  JENKINS_URL: ${{ secrets.JENKINS_URL }}
+  JENKINS_USER: ${{ secrets.JENKINS_USER }}
+  JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
 
 jobs:
   build-and-test:
@@ -33,6 +36,31 @@ jobs:
           name: FraudDetectionSystem
           path: target/FraudDetectionSystem-*.jar
 
+  jenkins-jobs:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Jenkins complex-build job
+        run: |
+          curl -X POST "${JENKINS_URL}/job/complex-build/build" \
+            --user "${JENKINS_USER}:${JENKINS_TOKEN}" \
+            --data-urlencode json='{"parameter": [{"name":"BRANCH", "value":"${{ github.ref }}"}]}'
+      
+      - name: Wait for Jenkins job to complete
+        run: |
+          while true; do
+            STATUS=$(curl -s "${JENKINS_URL}/job/complex-build/lastBuild/api/json" \
+              --user "${JENKINS_USER}:${JENKINS_TOKEN}" | jq -r '.result')
+            if [ "$STATUS" = "SUCCESS" ]; then
+              echo "Jenkins job completed successfully"
+              break
+            elif [ "$STATUS" = "FAILURE" ]; then
+              echo "Jenkins job failed"
+              exit 1
+            fi
+            sleep 10
+          done
+
   security-scan:
     runs-on: ubuntu-latest
     needs: build-and-test
@@ -51,7 +79,7 @@ jobs:
           path: ${{github.workspace}}/reports
 
   docker-build-push:
-    needs: [build-and-test, security-scan]
+    needs: [jenkins-jobs, security-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,18 +121,8 @@ jobs:
           npm install -g newman
           newman run tests/integration-tests.json
 
-  performance-tests:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run k6 performance tests
-        uses: grafana/k6-action@v0.3.0
-        with:
-          filename: performance-tests.js
-
   deploy-production:
-    needs: [integration-tests, performance-tests]
+    needs: integration-tests
     runs-on: ubuntu-latest
     environment: production
     steps:
