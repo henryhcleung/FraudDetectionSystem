@@ -16,17 +16,20 @@ pipeline {
             }
         }
         
-        stage('Security Scan') {
-            agent {
-                docker {
-                    image 'henryleungdemotest/dependency-check-image:latest'
-                    args '-v $WORKSPACE:/workspace'
+        stage('Pull Security Scan Image') {
+            steps {
+                script {
+                    echo 'Pulling security scan Docker image...'
+                    sh 'docker pull henryleungdemotest/dependency-check-image:latest'
                 }
             }
+        }
+        
+        stage('Security Scan') {
             steps {
                 script {
                     echo 'Running security scan...'
-                    sh 'dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"'
+                    sh 'docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"'
                 }
             }
         }
