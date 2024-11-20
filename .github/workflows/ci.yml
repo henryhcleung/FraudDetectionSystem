@@ -11,6 +11,7 @@ on:
 env:
   JAVA_VERSION: '11'
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem
+  NODE_VERSION: '20'
 
 jobs:
   build-and-test:
@@ -85,9 +86,8 @@ jobs:
         uses: medyagh/setup-minikube@master
       - name: Deploy to local Kubernetes
         run: |
-          minikube start --memory=2048 --cpus=2
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
+          minikube start --memory=4096 --cpus=2
+          kubectl apply -f k8s/
           kubectl set image deployment/fraud-detection-system fraud-detection-system=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
       - name: Wait for deployment
         run: |
@@ -95,15 +95,9 @@ jobs:
           kubectl rollout status deployment/fraud-detection-system --timeout=300s
       - name: Check deployment status
         run: |
-          echo "Deployment status:"
-          kubectl get deployments
-          echo "Pod status:"
-          kubectl get pods
-          echo "Detailed pod description:"
+          kubectl get deployments,pods,services
           kubectl describe pods
-          echo "Pod logs:"
           kubectl logs -l app=fraud-detection-system --all-containers=true --tail=100
-          echo "Events:"
           kubectl get events --sort-by=.metadata.creationTimestamp
       - name: Check for failed pods
         run: |
@@ -111,9 +105,7 @@ jobs:
           if [ -n "$FAILED_PODS" ]; then
             echo "Failed pods found: $FAILED_PODS"
             for pod in $FAILED_PODS; do
-              echo "Describing failed pod: $pod"
               kubectl describe pod $pod
-              echo "Logs for failed pod: $pod"
               kubectl logs $pod --all-containers=true --previous
             done
             exit 1
@@ -131,15 +123,12 @@ jobs:
           echo "Testing service at $SERVICE_URL"
           curl -v $SERVICE_URL || echo "Service not responding"
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
-      - name: Install Newman
-        run: |
-          npm install -g newman@latest
+          node-version: ${{ env.NODE_VERSION }}
       - name: Run integration tests
         run: |
-          echo "Running tests against $SERVICE_URL"
+          npm install -g newman@latest
           if [ -f "tests/postman_collection.json" ]; then
             newman run tests/postman_collection.json --env-var "baseUrl=$SERVICE_URL" || echo "Integration tests failed"
           else
