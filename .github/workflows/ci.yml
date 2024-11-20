@@ -45,6 +45,15 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest
 
+      - name: Install kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      - name: Create Kubernetes cluster
+        run: kind create cluster --wait 5m
+
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
