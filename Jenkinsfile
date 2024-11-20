@@ -29,6 +29,14 @@ pipeline {
             steps {
                 script {
                     echo 'Running security scan...'
+                    
+                    // Check if Docker is running
+                    sh 'docker info'
+                    
+                    // List files in the workspace to ensure it's mounted correctly
+                    sh 'docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest ls -l /workspace'
+                    
+                    // Run the security scan
                     sh 'docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"'
                 }
             }
