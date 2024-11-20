@@ -26,44 +26,19 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'adopt'
           cache: maven
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml -s custom-settings.xml
-      - name: Run unit tests
-        run: mvn test -s custom-settings.xml
+      - name: Build and test
+        run: |
+          mvn -B clean package --file pom.xml -s custom-settings.xml
+          mvn test -s custom-settings.xml
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: FraudDetectionSystem
           path: target/FraudDetectionSystem-*.jar
 
-  jenkins-jobs:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Jenkins complex-build job
-        run: |
-          curl -X POST "${JENKINS_URL}/job/complex-build/build" \
-            --user "${JENKINS_USER}:${JENKINS_TOKEN}" \
-            --data-urlencode json='{"parameter": [{"name":"BRANCH", "value":"${{ github.ref }}"}]}'
-      
-      - name: Wait for Jenkins job to complete
-        run: |
-          while true; do
-            STATUS=$(curl -s "${JENKINS_URL}/job/complex-build/lastBuild/api/json" \
-              --user "${JENKINS_USER}:${JENKINS_TOKEN}" | jq -r '.result')
-            if [ "$STATUS" = "SUCCESS" ]; then
-              echo "Jenkins job completed successfully"
-              break
-            elif [ "$STATUS" = "FAILURE" ]; then
-              echo "Jenkins job failed"
-              exit 1
-            fi
-            sleep 10
-          done
-
   security-scan:
-    runs-on: ubuntu-latest
     needs: build-and-test
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Run OWASP Dependency-Check
@@ -78,8 +53,41 @@ jobs:
           name: dependency-check-report
           path: ${{github.workspace}}/reports
 
+  jenkins-integration:
+    needs: [build-and-test, security-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Jenkins job
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${JENKINS_URL}/job/complex-build/build" \
+            --user "${JENKINS_USER}:${JENKINS_TOKEN}" \
+            --data-urlencode json='{"parameter": [{"name":"BRANCH", "value":"${{ github.ref }}"}]}')
+          if [ "$response" != "201" ]; then
+            echo "Failed to trigger Jenkins job. HTTP status: $response"
+            exit 1
+          fi
+      - name: Wait for Jenkins job completion
+        run: |
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            status=$(curl -s "${JENKINS_URL}/job/complex-build/lastBuild/api/json" \
+              --user "${JENKINS_USER}:${JENKINS_TOKEN}" | jq -r '.result')
+            if [ "$status" = "SUCCESS" ]; then
+              echo "Jenkins job completed successfully"
+              exit 0
+            elif [ "$status" = "FAILURE" ] || [ "$status" = "ABORTED" ]; then
+              echo "Jenkins job failed or was aborted"
+              exit 1
+            fi
+            attempt=$((attempt+1))
+            sleep 20
+          done
+          echo "Timeout waiting for Jenkins job completion"
+          exit 1
+
   docker-build-push:
-    needs: [jenkins-jobs, security-scan]
+    needs: jenkins-integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,6 +110,7 @@ jobs:
   deploy-staging:
     needs: docker-build-push
     runs-on: ubuntu-latest
+    environment: staging
     steps:
       - uses: actions/checkout@v4
       - name: Set up kubectl
@@ -135,9 +144,16 @@ jobs:
           kubectl set image deployment/frauddetection frauddetection=${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
   notify:
-    needs: deploy-production
-    runs-on: ubuntu-latest
     if: failure()
+    needs: 
+      - build-and-test
+      - security-scan
+      - jenkins-integration
+      - docker-build-push
+      - deploy-staging
+      - integration-tests
+      - deploy-production
+    runs-on: ubuntu-latest
     steps:
       - name: Send email notification
         uses: dawidd6/action-send-mail@v3
@@ -146,13 +162,13 @@ jobs:
           server_port: 587
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: Build Notification
+          subject: Build Notification - Failure in ${{ github.workflow }}
           to: henryleungdemotest@gmail.com
           from: github-actions@gmail.com
           body: |
             Build Notification
 
-            The build has failed.
+            The build has failed in the ${{ github.workflow }} workflow.
 
             **Repository**: ${{ github.repository }}
             **Branch**: ${{ github.ref }}
