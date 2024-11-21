@@ -30,7 +30,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
             .authorizeRequests()
-                .antMatchers("/login", "/h2-console/**").permitAll()
+                .antMatchers("/login", "/h2-console/**", "/actuator/health").permitAll() // Allow unauthenticated access to /actuator/health
                 .anyRequest().authenticated()
             .and()
             .formLogin()

@@ -1,12 +1,8 @@
 #!/bin/bash
 set -e
 
-# Use GitHub Actions environment variables or default values
-DOCKER_USERNAME=${DOCKER_USERNAME:-$DOCKER_USERNAME}
-IMAGE_TAG=${GITHUB_SHA:-latest}
-
-echo "Starting Minikube..."
-minikube start --memory=4096 --cpus=2
+# Ensure the script is run from the project root
+cd "$(dirname "$0")/.."
 
 echo "Applying Kubernetes manifests..."
 sed -e "s|\${DOCKER_USERNAME}|$DOCKER_USERNAME|g" \
@@ -17,7 +13,7 @@ kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/configmap.yaml
 
 echo "Waiting for deployment to be ready..."
-kubectl rollout status deployment/fraud-detection-system --timeout=300s
+kubectl rollout status deployment/fraud-detection-system --timeout=600s
 
 echo "Checking deployment status..."
 kubectl get deployments,pods,services
