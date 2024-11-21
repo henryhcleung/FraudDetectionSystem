@@ -14,7 +14,7 @@
        spec:
          containers:
          - name: fraud-detection-system
-           image: ${DOCKER_USERNAME}/frauddetectionsystem:${IMAGE_TAG}
+           image: ${DOCKER_USERNAME}/fraud-detection-system:${IMAGE_TAG}
            ports:
            - containerPort: 8080
            resources:
