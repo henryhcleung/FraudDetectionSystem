@@ -12,7 +12,7 @@ pipeline {
                 script {
                     echo 'Initializing pipeline...'
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin || exit 1'
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
                 }
             }
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building and testing the application...'
-                    sh './scripts/build.sh || exit 1'
+                    sh './scripts/build.sh'
                 }
             }
         }
@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building security scan Docker image...'
-                    sh 'docker build -f Dockerfile.dependency-check -t ${DEPENDENCY_CHECK_IMAGE} . || exit 1'
+                    sh 'docker build -f Dockerfile.dependency-check -t ${DEPENDENCY_CHECK_IMAGE} .'
                 }
             }
         }
@@ -40,11 +40,11 @@ pipeline {
             steps {
                 script {
                     echo 'Running security scan...'
-                    sh 'docker info || exit 1'
-                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace || exit 1"
+                    sh 'docker info'
+                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace"
                     sh """
                         docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} \
-                        /usr/local/bin/dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports" || exit 1
+                        /usr/local/bin/dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"
                     """
                 }
             }
@@ -60,7 +60,7 @@ pipeline {
                         
                         echo 'Pushing Docker image to registry...'
                         docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                            builtImage.push() || exit 1
+                            builtImage.push()
                         }
                     }
                 }
@@ -71,7 +71,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying and testing the application...'
-                    sh './scripts/deploy.sh || exit 1'
+                    sh './scripts/deploy.sh'
                 }
             }
         }
