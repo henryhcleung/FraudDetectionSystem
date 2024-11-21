@@ -11,6 +11,7 @@ on:
 env:
   JAVA_VERSION: '11'
   NODE_VERSION: '20'
+  KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
 
 jobs:
   build-and-test:
@@ -80,12 +81,28 @@ jobs:
           docker image prune -f
           docker images --filter "dangling=true" -q | xargs -r docker rmi
 
+  deploy-to-kubernetes:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Kubernetes
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      - name: Configure kubectl
+        run: echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
   notify:
     if: failure()
     needs: 
       - build-and-test
       - security-scan
       - docker-build-push
+      - deploy-to-kubernetes
     runs-on: ubuntu-latest
     steps:
       - name: Send email notification

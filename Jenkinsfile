@@ -5,6 +5,7 @@ pipeline {
         JAVA_VERSION = '11'
         DEPENDENCY_CHECK_IMAGE = "henryleungdemotest/dependency-check-image:latest"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        KUBE_CONFIG_CREDENTIALS_ID = 'kube-config'
     }
     
     stages {
@@ -58,6 +59,18 @@ pipeline {
                         docker.withRegistry('https://registry.hub.docker.com', DOCKER_CREDENTIALS_ID) {
                             builtImage.push()
                         }
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo 'Deploying to Kubernetes...'
+                    withCredentials([file(credentialsId: KUBE_CONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                        sh 'kubectl apply -f k8s/deployment.yaml'
+                        sh 'kubectl apply -f k8s/service.yaml'
                     }
                 }
             }
