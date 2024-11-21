@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Ensure the script is run from the project root
+cd "$(dirname "$0")/.."
+
 # Ensure DOCKER_USERNAME is set
 if [ -z "$DOCKER_USERNAME" ]; then
   echo "DOCKER_USERNAME is not set. Exiting."
@@ -29,11 +32,14 @@ kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/configmap.yaml
 
 echo "Waiting for deployment to be ready..."
-kubectl rollout status deployment/fraud-detection-system --timeout=600s
+kubectl rollout status deployment/fraud-detection-system --timeout=600s || {
+  echo "Deployment failed to become ready. Gathering logs..."
+  kubectl describe pods
+  kubectl logs -l app=fraud-detection-system --all-containers=true --tail=100
+  exit 1
+}
 
 echo "Checking deployment status..."
 kubectl get deployments,pods,services
-kubectl describe pods
-kubectl logs -l app=fraud-detection-system --all-containers=true --tail=100
 
 echo "Deployment completed successfully."
