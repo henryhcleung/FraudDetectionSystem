@@ -1,17 +1,23 @@
 FROM openjdk:11-jre-slim
 
-# Install necessary tools
-RUN apt-get update && apt-get install -y wget unzip
+# Install necessary tools and clean up
+RUN apt-get update && \
+    apt-get install -y wget unzip && \
+    rm -rf /var/lib/apt/lists/*
 
-# Download and unzip Dependency Check
-RUN wget https://github.com/jeremylong/DependencyCheck/releases/download/v11.1.0/dependency-check-11.1.0-release.zip
-RUN unzip dependency-check-11.1.0-release.zip -d /opt
+# Set Dependency-Check version
+ENV DC_VERSION="11.1.0"
+
+# Download and unzip Dependency-Check
+RUN wget https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip && \
+    unzip dependency-check-${DC_VERSION}-release.zip -d /opt && \
+    rm dependency-check-${DC_VERSION}-release.zip
 
 # Set the PATH environment variable
 ENV PATH="/opt/dependency-check/bin:${PATH}"
 
 # Copy the dependency-check.sh script to a directory in the PATH
-COPY dependency-check.sh /usr/local/bin/
+COPY scripts/dependency-check.sh /usr/local/bin/
 
 # Ensure the script has execute permissions
 RUN chmod +x /usr/local/bin/dependency-check.sh
@@ -19,5 +25,5 @@ RUN chmod +x /usr/local/bin/dependency-check.sh
 # Set the working directory
 WORKDIR /workspace
 
-# Default command (optional, if you want to run something by default)
+# Default command (optional)
 # CMD ["dependency-check.sh"]
