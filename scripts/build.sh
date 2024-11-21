@@ -1,18 +1,23 @@
 #!/bin/bash
 set -e
 
+# Ensure DOCKER_USERNAME is set
+if [ -z "$DOCKER_USERNAME" ]; then
+  echo "DOCKER_USERNAME is not set. Exiting."
+  exit 1
+fi
+
 # Use GitHub Actions environment variables or default values
-DOCKER_USERNAME=${DOCKER_USERNAME:-$DOCKER_USERNAME}
 IMAGE_TAG=${GITHUB_SHA:-latest}
 
 echo "Starting Minikube with adjusted resources..."
 minikube start --memory=7000 --cpus=4
 
 echo "Building Docker image..."
-docker build -t $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG .
+docker build -t ${DOCKER_USERNAME}/fraud-detection-system:${IMAGE_TAG} .
 
 echo "Pushing Docker image to registry..."
-docker push $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG
+docker push ${DOCKER_USERNAME}/fraud-detection-system:${IMAGE_TAG}
 
 echo "Applying Kubernetes manifests..."
 sed -e "s|\${DOCKER_USERNAME}|$DOCKER_USERNAME|g" \
