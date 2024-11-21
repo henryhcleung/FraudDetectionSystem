@@ -104,7 +104,7 @@ pipeline {
         }
         failure {
             script {
-                echo 'Pipeline failed. Sending notification email...'
+                echo 'Pipeline failed. Sending notification email'
                 mail to: 'henryleungdemotest@gmail.com',
                      subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
                      body: "Something is wrong with ${env.BUILD_URL}"
