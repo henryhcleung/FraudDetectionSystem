@@ -1,21 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "Building the project..."
-mvn -B clean package --file pom.xml -s custom-settings.xml
-
-echo "Running tests..."
-mvn test -s custom-settings.xml
-
-echo "Build and test completed successfully."
-```
-
-### Updated `deploy.sh` Script
-
-```bash
-#!/bin/bash
-set -e
-
 # Use GitHub Actions environment variables or default values
 DOCKER_USERNAME=${DOCKER_USERNAME:-$DOCKER_USERNAME}
 IMAGE_TAG=${GITHUB_SHA:-latest}
