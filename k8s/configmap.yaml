@@ -3,4 +3,5 @@ kind: ConfigMap
 metadata:
   name: fraud-detection-config
 data:
-  SPRING_PROFILES_ACTIVE: "production"
+  application.properties: |
+    SPRING_PROFILES_ACTIVE=production

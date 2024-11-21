@@ -4,6 +4,10 @@ set -e
 # Ensure the script is run from the project root
 cd "$(dirname "$0")/.."
 
+# Variables
+DOCKER_USERNAME="my-docker-username"
+IMAGE_TAG="latest"
+
 echo "Applying Kubernetes manifests..."
 sed -e "s|\${DOCKER_USERNAME}|$DOCKER_USERNAME|g" \
     -e "s|\${IMAGE_TAG}|$IMAGE_TAG|g" \
