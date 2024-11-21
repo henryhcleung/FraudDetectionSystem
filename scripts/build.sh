@@ -7,11 +7,12 @@ if [ -z "$DOCKER_USERNAME" ]; then
   exit 1
 fi
 
+# Build the application
+echo "Building the application..."
+mvn clean package
+
 # Use GitHub Actions environment variables or default values
 IMAGE_TAG=${GITHUB_SHA:-latest}
-
-echo "Starting Minikube with adjusted resources..."
-minikube start --memory=7000 --cpus=4
 
 echo "Building Docker image..."
 docker build -t ${DOCKER_USERNAME}/fraud-detection-system:${IMAGE_TAG} .

@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building and testing the application...'
-                    sh './scripts/build.sh'
+                    sh 'mvn clean package'
                 }
             }
         }
@@ -51,7 +51,7 @@ pipeline {
                     echo 'Building Docker image...'
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         def imageTag = "${DOCKER_USERNAME}/frauddetectionsystem:${env.BUILD_NUMBER}"
-                        def builtImage = docker.build(imageTag)
+                        def builtImage = docker.build(imageTag, '-f Dockerfile .')
                         
                         echo 'Pushing Docker image to registry...'
                         docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
