@@ -24,7 +24,7 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build and test
-        run: ./scripts/build.sh
+        run: mvn clean package
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       - name: Upload artifact
