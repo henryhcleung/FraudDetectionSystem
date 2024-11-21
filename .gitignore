@@ -1,4 +1,4 @@
-echo "/target/
+/target/
 *.class
 *.log
 *.jar
@@ -6,4 +6,4 @@ echo "/target/
 *.ear
 *.iml
 .idea/
-*.swp" > .gitignore
+*.swp

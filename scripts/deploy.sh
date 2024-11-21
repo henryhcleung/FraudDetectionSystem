@@ -8,6 +8,10 @@ cd "$(dirname "$0")/.."
 DOCKER_USERNAME="henryleungdemotest"
 IMAGE_TAG="latest"
 
+# Build the JAR file
+echo "Building the JAR file..."
+mvn clean package
+
 echo "Building and pushing Docker image..."
 docker build -t $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG .
 docker push $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG
