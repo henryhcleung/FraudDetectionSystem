@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Set the Dependency-Check version
 DC_VERSION="11.1.0"

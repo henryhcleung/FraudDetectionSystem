@@ -11,7 +11,6 @@ pipeline {
             steps {
                 script {
                     echo 'Initializing pipeline...'
-                    // Test Docker registry access
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin || exit 1'
                     }
@@ -41,8 +40,8 @@ pipeline {
             steps {
                 script {
                     echo 'Running security scan...'
-                    sh 'docker info || exit 1' // Ensure Docker is running
-                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace || exit 1" // Verify workspace
+                    sh 'docker info || exit 1'
+                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace || exit 1"
                     sh """
                         docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} \
                         /usr/local/bin/dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports" || exit 1
@@ -56,7 +55,8 @@ pipeline {
                 script {
                     echo 'Building Docker image...'
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        def builtImage = docker.build("${DOCKER_USERNAME}/frauddetectionsystem:${env.BUILD_NUMBER}")
+                        def imageTag = "${DOCKER_USERNAME}/frauddetectionsystem:${env.BUILD_NUMBER}"
+                        def builtImage = docker.build(imageTag)
                         
                         echo 'Pushing Docker image to registry...'
                         docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
