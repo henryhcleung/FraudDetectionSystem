@@ -1,11 +1,11 @@
-   apiVersion: v1
-   kind: Service
-   metadata:
-     name: fraud-detection-system
-   spec:
-     selector:
-       app: fraud-detection-system
-     ports:
-     - port: 8080
-       targetPort: 8080
-     type: LoadBalancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-detection-system
+spec:
+  selector:
+    app: fraud-detection-system
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: LoadBalancer
