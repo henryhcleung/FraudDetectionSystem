@@ -1,3 +1,4 @@
+# Use an official OpenJDK runtime as a parent image
 FROM openjdk:11-jre-slim
 
 # Set the working directory

@@ -5,8 +5,12 @@ set -e
 cd "$(dirname "$0")/.."
 
 # Variables
-DOCKER_USERNAME="my-docker-username"
+DOCKER_USERNAME="henryleungdemotest"
 IMAGE_TAG="latest"
+
+echo "Building and pushing Docker image..."
+docker build -t $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG .
+docker push $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG
 
 echo "Applying Kubernetes manifests..."
 sed -e "s|\${DOCKER_USERNAME}|$DOCKER_USERNAME|g" \

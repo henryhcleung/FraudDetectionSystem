@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fraud-detection-system
+  labels:
+    app: fraud-detection-system
 spec:
   replicas: 3
   selector:
@@ -14,7 +16,7 @@ spec:
     spec:
       containers:
       - name: fraud-detection-system
-        image: my-docker-username/fraud-detection-system:latest
+        image: henryleungdemotest/fraud-detection-system:latest
         ports:
         - containerPort: 8080
         resources:
