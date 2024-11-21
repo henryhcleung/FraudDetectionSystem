@@ -30,17 +30,8 @@ pipeline {
             steps {
                 script {
                     echo 'Running security scan...'
-                    
-                    // Print the workspace path
-                    echo "Workspace path: $WORKSPACE"
-                    
-                    // Check if Docker is running
-                    sh 'docker info'
-                    
-                    // List files in the workspace to ensure it's mounted correctly
-                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace"
-                    
-                    // Run the security scan
+                    sh 'docker info' // Ensure Docker is running
+                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace" // Verify workspace
                     sh """
                         docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} \
                         /usr/local/bin/dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"
