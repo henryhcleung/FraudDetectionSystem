@@ -85,9 +85,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Kind
-        uses: engineerd/setup-kind@v0.5.0
-        with:
-          version: v0.11.1
+        uses: kind-ci/setup-kind@v0.6.0  # Updated to a version that supports Node.js 16/20
+      - name: Delete existing Kind cluster
+        run: kind delete cluster || true
       - name: Create Kind cluster
         run: kind create cluster
       - name: Deploy to Kind

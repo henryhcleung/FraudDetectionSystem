@@ -8,6 +8,11 @@ pipeline {
         KUBE_CONFIG_CREDENTIALS_ID = 'kube-config'
     }
     
+    options {
+        timeout(time: 1, unit: 'HOURS') // Set a timeout for the pipeline
+        timestamps() // Add timestamps to the console output
+    }
+    
     stages {
         stage('Initialize') {
             steps {
