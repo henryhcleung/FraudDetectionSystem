@@ -3,11 +3,22 @@ pipeline {
     
     environment {
         JAVA_VERSION = '11'
-        DOCKER_IMAGE = "${env.DOCKER_USERNAME}/frauddetectionsystem"
         DEPENDENCY_CHECK_IMAGE = "henryleungdemotest/dependency-check-image:latest"
     }
     
     stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo 'Initializing pipeline...'
+                    // Test Docker registry access
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    }
+                }
+            }
+        }
+        
         stage('Build and Test') {
             steps {
                 script {
@@ -44,11 +55,13 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    def builtImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                    
-                    echo 'Pushing Docker image to registry...'
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        builtImage.push()
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        def builtImage = docker.build("${DOCKER_USERNAME}/frauddetectionsystem:${env.BUILD_NUMBER}")
+                        
+                        echo 'Pushing Docker image to registry...'
+                        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                            builtImage.push()
+                        }
                     }
                 }
             }
@@ -65,6 +78,12 @@ pipeline {
     }
     
     post {
+        always {
+            script {
+                echo 'Cleaning up...'
+                sh 'docker logout'
+            }
+        }
         success {
             script {
                 echo 'Pipeline completed successfully.'
