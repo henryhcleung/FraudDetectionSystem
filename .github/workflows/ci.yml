@@ -10,7 +10,6 @@ on:
 
 env:
   JAVA_VERSION: '11'
-  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem
   NODE_VERSION: '20'
 
 jobs:
@@ -26,6 +25,8 @@ jobs:
           cache: maven
       - name: Build and test
         run: ./scripts/build.sh
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -71,9 +72,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_IMAGE }}:latest,${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,mode=max
+          tags: ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest,${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:buildcache,mode=max
 
   deploy-and-test:
     needs: docker-build-push
