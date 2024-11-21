@@ -111,7 +111,7 @@ jobs:
         run: |
           npm install -g newman@latest
           if [ -f "tests/postman_collection.json" ]; then
-            newman run tests/postman_collection.json --env-var "baseUrl=$SERVICE_URL" || echo "Integration tests failed"
+            newman run tests/postman_collection.json --env-var "baseUrl=$SERVICE_URL" || echo "Integration tests failed."
           else
             echo "Postman collection not found. Skipping integration tests."
           fi
