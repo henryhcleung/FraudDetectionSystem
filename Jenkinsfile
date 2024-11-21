@@ -30,6 +30,9 @@ pipeline {
                 script {
                     echo 'Running security scan...'
                     
+                    // Print the workspace path
+                    echo "Workspace path: $WORKSPACE"
+                    
                     // Check if Docker is running
                     sh 'docker info'
                     
@@ -37,7 +40,10 @@ pipeline {
                     sh 'docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest ls -l /workspace'
                     
                     // Run the security scan
-                    sh 'docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"'
+                    sh '''
+                        docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest \
+                        dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"
+                    '''
                 }
             }
         }
