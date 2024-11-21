@@ -5,8 +5,8 @@ set -e
 DOCKER_USERNAME=${DOCKER_USERNAME:-$DOCKER_USERNAME}
 IMAGE_TAG=${GITHUB_SHA:-latest}
 
-echo "Starting Minikube with increased resources..."
-minikube start --memory=8192 --cpus=4
+echo "Starting Minikube with adjusted resources..."
+minikube start --memory=7000 --cpus=4
 
 echo "Building Docker image..."
 docker build -t $DOCKER_USERNAME/fraud-detection-system:$IMAGE_TAG .
