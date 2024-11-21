@@ -73,6 +73,9 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest,${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:buildcache,mode=max
+        retry:
+          max_attempts: 3
+          delay: 10s
       - name: Clean up old images
         run: |
           docker image prune -f
