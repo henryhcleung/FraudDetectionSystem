@@ -4,6 +4,7 @@ pipeline {
     environment {
         JAVA_VERSION = '11'
         DOCKER_IMAGE = "${env.DOCKER_USERNAME}/frauddetectionsystem"
+        DEPENDENCY_CHECK_IMAGE = "henryleungdemotest/dependency-check-image:latest"
     }
     
     stages {
@@ -16,11 +17,11 @@ pipeline {
             }
         }
         
-        stage('Pull Security Scan Image') {
+        stage('Build Security Scan Image') {
             steps {
                 script {
-                    echo 'Pulling security scan Docker image...'
-                    sh 'docker pull henryleungdemotest/dependency-check-image:latest'
+                    echo 'Building security scan Docker image...'
+                    sh 'docker build -f Dockerfile.dependency-check -t ${DEPENDENCY_CHECK_IMAGE} .'
                 }
             }
         }
@@ -37,13 +38,13 @@ pipeline {
                     sh 'docker info'
                     
                     // List files in the workspace to ensure it's mounted correctly
-                    sh 'docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest ls -l /workspace'
+                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace"
                     
                     // Run the security scan
-                    sh '''
-                        docker run --rm -v $WORKSPACE:/workspace henryleungdemotest/dependency-check-image:latest \
-                        dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"
-                    '''
+                    sh """
+                        docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} \
+                        /usr/local/bin/dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"
+                    """
                 }
             }
         }
