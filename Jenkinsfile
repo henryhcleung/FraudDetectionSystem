@@ -69,6 +69,8 @@ pipeline {
                 script {
                     echo 'Deploying to Kubernetes...'
                     withCredentials([file(credentialsId: KUBE_CONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                        sh 'mkdir -p $HOME/.kube'
+                        sh 'cp $KUBECONFIG $HOME/.kube/config'
                         sh 'kubectl apply -f k8s/deployment.yaml'
                         sh 'kubectl apply -f k8s/service.yaml'
                     }
