@@ -93,6 +93,8 @@ jobs:
         run: kind delete cluster || true
       - name: Create Kind cluster
         run: kind create cluster
+      - name: List k8s directory contents
+        run: ls -l k8s
       - name: Deploy to Kind
         run: |
           kubectl apply -f k8s/configmap.yaml
