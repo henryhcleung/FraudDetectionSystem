@@ -4,6 +4,7 @@ pipeline {
     environment {
         JAVA_VERSION = '11'
         DEPENDENCY_CHECK_IMAGE = "henryleungdemotest/dependency-check-image:latest"
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
     
     stages {
@@ -11,7 +12,7 @@ pipeline {
             steps {
                 script {
                     echo 'Initializing pipeline...'
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
                 }
@@ -22,7 +23,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building and testing the application...'
-                    sh 'mvn clean package'
+                    sh 'mvn clean package -s custom-settings.xml'
                 }
             }
         }
@@ -49,12 +50,12 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         def imageTag = "${DOCKER_USERNAME}/frauddetectionsystem:${env.BUILD_NUMBER}"
                         def builtImage = docker.build(imageTag, '-f Dockerfile .')
                         
                         echo 'Pushing Docker image to registry...'
-                        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        docker.withRegistry('https://registry.hub.docker.com', DOCKER_CREDENTIALS_ID) {
                             builtImage.push()
                         }
                     }
@@ -93,4 +94,3 @@ pipeline {
             }
         }
     }
-}
