@@ -78,6 +78,7 @@ pipeline {
             script {
                 echo 'Cleaning up...'
                 sh 'docker logout'
+                sh 'docker image prune -f'
             }
         }
         success {
