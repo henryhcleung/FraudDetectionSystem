@@ -40,12 +40,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running security scan...'
-                    sh 'docker info'
-                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} ls -l /workspace"
-                    sh """
-                        docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} \
-                        /usr/local/bin/dependency-check.sh --project "FraudDetectionSystem" --scan "/workspace" --format "HTML" --out "/workspace/reports"
-                    """
+                    sh "docker run --rm -v $WORKSPACE:/workspace ${DEPENDENCY_CHECK_IMAGE} /usr/local/bin/dependency-check.sh --project 'FraudDetectionSystem' --scan '/workspace' --format 'HTML' --out '/workspace/reports'"
                 }
             }
         }
