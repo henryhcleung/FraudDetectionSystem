@@ -30,8 +30,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
             .authorizeRequests()
-                .antMatchers("/login", "/h2-console/**", "/actuator/health").permitAll() // Allow unauthenticated access to /actuator/health
-                .anyRequest().authenticated()
+                .antMatchers("/login", "/h2-console/**", "/actuator/health").permitAll() // Allow unauthenticated access to these endpoints
+                .anyRequest().authenticated() // Require authentication for all other requests
             .and()
             .formLogin()
                 .loginPage("/login")
@@ -41,14 +41,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .logout()
                 .permitAll()
             .and()
-            .csrf().disable(); // Disable CSRF for testing
+            .csrf().disable(); // Disable CSRF for testing purposes
 
-        // Allow H2 console to be accessed
+        // Allow H2 console to be accessed without frame options restrictions
         http.headers().frameOptions().disable();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return NoOpPasswordEncoder.getInstance(); // Use NoOpPasswordEncoder for testing (not recommended for production)
     }
 }
