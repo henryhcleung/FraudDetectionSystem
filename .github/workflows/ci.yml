@@ -69,7 +69,7 @@ jobs:
       - name: Build and push
         run: |
           for i in {1..3}; do
-            docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:latest --tag ${{ secrets.DOCKER_USERNAME }}/frauddetectionsystem:${{ github.sha }} .
+            docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/fraud-detection-system:latest --tag ${{ secrets.DOCKER_USERNAME }}/fraud-detection-system:${{ github.sha }} .
             if [ $? -eq 0 ]; then
               break
             fi
@@ -95,6 +95,7 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
       - name: Deploy to Kubernetes
         run: |
+          kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 

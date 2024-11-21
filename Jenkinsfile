@@ -52,7 +52,7 @@ pipeline {
                 script {
                     echo 'Building Docker image...'
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        def imageTag = "${DOCKER_USERNAME}/frauddetectionsystem:${env.BUILD_NUMBER}"
+                        def imageTag = "${DOCKER_USERNAME}/fraud-detection-system:${env.BUILD_NUMBER}"
                         def builtImage = docker.build(imageTag, '-f Dockerfile .')
                         
                         echo 'Pushing Docker image to registry...'
@@ -71,6 +71,7 @@ pipeline {
                     withCredentials([file(credentialsId: KUBE_CONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
                         sh 'mkdir -p $HOME/.kube'
                         sh 'cp $KUBECONFIG $HOME/.kube/config'
+                        sh 'kubectl apply -f k8s/configmap.yaml'
                         sh 'kubectl apply -f k8s/deployment.yaml'
                         sh 'kubectl apply -f k8s/service.yaml'
                     }
