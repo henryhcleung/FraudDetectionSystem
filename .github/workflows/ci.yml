@@ -1,4 +1,4 @@
-name: CI/CD Pipeline with Kind
+name: CI/CD Pipeline
 
 on:
   push:
@@ -11,6 +11,11 @@ on:
 env:
   JAVA_VERSION: '11'
   NODE_VERSION: '20'
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
 
 jobs:
   build-and-test:
@@ -93,6 +98,8 @@ jobs:
         run: kind delete cluster || true
       - name: Create Kind cluster
         run: kind create cluster
+      - name: List root directory contents
+        run: ls -l
       - name: List k8s directory contents
         run: ls -l k8s
       - name: Deploy to Kind
