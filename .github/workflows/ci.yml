@@ -98,7 +98,7 @@ jobs:
         run: |
           SERVICE_URL=$(minikube service fraud-detection-system --url)
           echo "Testing service at $SERVICE_URL"
-          curl -v $SERVICE_URL || echo "Service not responding"
+          curl -v $SERVICE_URL || echo "Service not responding..."
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
