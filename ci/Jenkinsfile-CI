@@ -8,6 +8,9 @@ pipeline {
     
     environment {
         SDKMAN_DIR = "/var/jenkins/.sdkman"
+        JAVA_HOME = "${SDKMAN_DIR}/candidates/java/current"
+        MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
+        PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -31,21 +34,13 @@ pipeline {
             }
         }
         
-        stage('Setup SDKMAN') {
-            steps {
-                sh '''
-                    curl -s "https://get.sdkman.io" | bash
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env install
-                '''
-            }
-        }
-        
         stage('Environment Setup') {
             steps {
                 sh '''
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
+                    echo "JAVA_HOME: $JAVA_HOME"
+                    echo "PATH: $PATH"
                     java -version
                     mvn -version
                 '''
@@ -54,21 +49,13 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh '''
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env
-                    mvn clean package -DskipTests -s custom-settings.xml
-                '''
+                sh 'mvn clean package -DskipTests -s custom-settings.xml'
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh '''
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env
-                    mvn test -s custom-settings.xml
-                '''
+                sh 'mvn test -s custom-settings.xml'
             }
             post {
                 always {
@@ -79,11 +66,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh '''
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env
-                    mvn verify -DskipUnitTests -s custom-settings.xml
-                '''
+                sh 'mvn verify -DskipUnitTests -s custom-settings.xml'
             }
             post {
                 always {
@@ -95,11 +78,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh '''
-                        source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                        sdk env
-                        mvn sonar:sonar -s custom-settings.xml
-                    '''
+                    sh 'mvn sonar:sonar -s custom-settings.xml'
                 }
             }
         }
@@ -120,11 +99,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh '''
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env
-                    mvn jacoco:report -s custom-settings.xml
-                '''
+                sh 'mvn jacoco:report -s custom-settings.xml'
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -135,11 +110,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh '''
-                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-                    sdk env
-                    mvn org.owasp:dependency-check-maven:check -s custom-settings.xml
-                '''
+                sh 'mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
