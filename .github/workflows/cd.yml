@@ -37,8 +37,8 @@ jobs:
           docker images --filter "dangling=true" -q | xargs -r docker rmi
 
   deploy-to-kind:
-    runs-on: ubuntu-latest
     needs: docker-build-push
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
