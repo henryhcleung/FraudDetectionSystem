@@ -2,7 +2,7 @@ pipeline {
     agent { label 'microservice-deploy-agent-1' }
     
     parameters {
-        string(name: 'DOCKER_TAG', defaultValue: '', description: 'Docker tag to deploy')
+        string(name: 'DOCKER_TAG', defaultValue: 'latest-dev', description: 'Docker tag to deploy')
         choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Environment to deploy to')
     }
     
