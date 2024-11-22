@@ -7,7 +7,7 @@ pipeline {
     }
     
     environment {
-        SDKMAN_DIR = "/var/jenkins/.sdkman"
+        SDKMAN_DIR = "${env.WORKSPACE}/.sdkman"
         JAVA_HOME = "${SDKMAN_DIR}/candidates/java/current"
         MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
         PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
@@ -39,9 +39,9 @@ pipeline {
                 sh '''
                     if [ ! -d "${SDKMAN_DIR}" ]; then
                         curl -s "https://get.sdkman.io" | bash
+                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                        sdk install java 17.0.12-jbr
                     fi
-                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                    sdk install java 17.0.12-jbr
                 '''
             }
         }
