@@ -18,6 +18,8 @@ pipeline {
         
         stage('Build') {
             steps {
+                sh 'echo $DOCKER_USERNAME'
+                sh 'chmod +x ./ci/build.sh'
                 sh './ci/build.sh'
             }
         }
@@ -38,6 +40,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
+                sh 'chmod +x ./scripts/dependency-check.sh'
                 sh './scripts/dependency-check.sh'
             }
         }
@@ -72,6 +75,9 @@ pipeline {
     post {
         always {
             cleanWs()
+        }
+        failure {
+            echo 'Pipeline failed! Check the logs for details.'
         }
     }
 }
