@@ -7,9 +7,9 @@ pipeline {
     }
     
     environment {
-        JAVA_VERSION = '17'
+        JAVA_VERSION = 'JDK17'
         MAVEN_VERSION = '3.8.4'
-        JAVA_HOME = tool "jdk-${JAVA_VERSION}"
+        JAVA_HOME = tool "${JAVA_VERSION}"
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
