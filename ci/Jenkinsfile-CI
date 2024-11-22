@@ -9,8 +9,6 @@ pipeline {
     environment {
         JAVA_VERSION = 'JDK17'
         MAVEN_VERSION = 'maven-3.8.4'
-        JAVA_HOME = tool(name: "${JAVA_VERSION}", type: 'jdk')
-        PATH = "${JAVA_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -44,21 +42,25 @@ pipeline {
         
         stage('Build and Analyze') {
             steps {
-                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    sh '''
-                        mvn -B -s custom-settings.xml verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.organization=henryhcleung \
-                        -Dsonar.host.url=https://sonarcloud.io \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    '''
+                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
+                    withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            mvn -B -s custom-settings.xml verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                            -Dsonar.organization=henryhcleung \
+                            -Dsonar.host.url=https://sonarcloud.io \
+                            -Dsonar.login=${SONAR_TOKEN}
+                        '''
+                    }
                 }
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh 'mvn -s custom-settings.xml test'
+                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
+                    sh 'mvn -s custom-settings.xml test'
+                }
             }
             post {
                 always {
@@ -69,7 +71,9 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh 'mvn -s custom-settings.xml verify -DskipUnitTests'
+                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
+                    sh 'mvn -s custom-settings.xml verify -DskipUnitTests'
+                }
             }
             post {
                 always {
@@ -92,7 +96,9 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh 'mvn -s custom-settings.xml jacoco:report'
+                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
+                    sh 'mvn -s custom-settings.xml jacoco:report'
+                }
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
