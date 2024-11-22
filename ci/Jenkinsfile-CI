@@ -2,7 +2,7 @@ pipeline {
     agent { label 'microservice-build-agent-1' }
     
     environment {
-        JAVA_VERSION = '17.0.8-tem'
+        JAVA_VERSION = '17.0.1-zulu'
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
@@ -23,7 +23,6 @@ pipeline {
                     export SDKMAN_DIR="$HOME/.sdkman"
                     [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
                     sdk use java ${JAVA_VERSION}
-                    java -version
                 '''
             }
         }
