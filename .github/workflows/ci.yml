@@ -77,3 +77,4 @@ jobs:
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           event-type: trigger-cd
+          client-payload: '{"run_id": "${{ github.run_id }}"}'
