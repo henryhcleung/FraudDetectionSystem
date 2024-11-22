@@ -26,6 +26,10 @@ pipeline {
         cron('0 0 * * *') // Daily at midnight UTC
     }
     
+    tools {
+        git 'Default' // Ensure this matches the name in Jenkins Global Tool Configuration
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -40,13 +44,13 @@ pipeline {
         stage('Build and Analyze') {
             steps {
                 withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    sh """
+                    sh '''
                         mvn -B -s custom-settings.xml verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                         -Dsonar.organization=henryhcleung \
                         -Dsonar.host.url=https://sonarcloud.io \
                         -Dsonar.login=${SONAR_TOKEN}
-                    """
+                    '''
                 }
             }
         }
