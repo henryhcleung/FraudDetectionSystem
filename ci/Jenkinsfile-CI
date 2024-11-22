@@ -34,6 +34,18 @@ pipeline {
             }
         }
         
+        stage('Install SDKMAN') {
+            steps {
+                sh '''
+                    if [ ! -d "${SDKMAN_DIR}" ]; then
+                        curl -s "https://get.sdkman.io" | bash
+                    fi
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk install java 17.0.12-jbr
+                '''
+            }
+        }
+        
         stage('Environment Setup') {
             steps {
                 sh '''
@@ -49,13 +61,21 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests -s custom-settings.xml'
+                sh '''
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
+                    mvn clean package -DskipTests -s custom-settings.xml
+                '''
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh 'mvn test -s custom-settings.xml'
+                sh '''
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
+                    mvn test -s custom-settings.xml
+                '''
             }
             post {
                 always {
@@ -66,7 +86,11 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh 'mvn verify -DskipUnitTests -s custom-settings.xml'
+                sh '''
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
+                    mvn verify -DskipUnitTests -s custom-settings.xml
+                '''
             }
             post {
                 always {
@@ -78,7 +102,11 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar -s custom-settings.xml'
+                    sh '''
+                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                        sdk use java 17.0.12-jbr
+                        mvn sonar:sonar -s custom-settings.xml
+                    '''
                 }
             }
         }
@@ -99,7 +127,11 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh 'mvn jacoco:report -s custom-settings.xml'
+                sh '''
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
+                    mvn jacoco:report -s custom-settings.xml
+                '''
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -110,7 +142,11 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh 'mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
+                sh '''
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
+                    mvn org.owasp:dependency-check-maven:check -s custom-settings.xml
+                '''
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
