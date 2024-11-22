@@ -32,16 +32,15 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: "*/${params.BRANCH}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'git-credentials']],
-                    extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
-                ])
+                script {
+                    git branch: params.BRANCH, url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'git-credentials'
+                }
             }
         }
         
         stage('Cache') {
             steps {
+                // Ensure the cache plugin is installed and configured
                 cache(path: "${HOME}/.m2/repository", key: "${env.JOB_NAME}-${env.BRANCH_NAME}-maven-cache")
                 cache(path: "${HOME}/.sonar/cache", key: "${env.JOB_NAME}-${env.BRANCH_NAME}-sonar-cache")
             }
