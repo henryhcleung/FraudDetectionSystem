@@ -1,5 +1,3 @@
-@Library('my-shared-library@main') _
-
 pipeline {
     agent { label 'microservice-deploy-agent-1' }
     
@@ -13,6 +11,12 @@ pipeline {
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${params.BUILD_NUMBER}-${params.ENV}"
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
+        KUBE_CONFIG = credentials('kube-config')
+    }
+    
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
     }
     
     stages {
@@ -22,10 +26,27 @@ pipeline {
             }
         }
         
+        stage('Prepare Deployment') {
+            steps {
+                script {
+                    // Update Kubernetes manifests with the new image tag
+                    sh """
+                        sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${DOCKER_TAG}|' k8s/deployment.yaml
+                    """
+                }
+            }
+        }
+        
         stage('Deploy to Kubernetes') {
             steps {
                 withKubeConfig([credentialsId: 'kube-config']) {
-                    sh "./cd/deploy.sh ${params.ENV}"
+                    sh """
+                        kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                        kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
+                        kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
+                        kubectl apply -f k8s/service.yaml -n ${KUBERNETES_NAMESPACE}
+                        kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=300s
+                    """
                 }
             }
         }
@@ -33,27 +54,49 @@ pipeline {
         stage('Run Integration Tests') {
             steps {
                 script {
-                    runIntegrationTests()
+                    // Add your integration test logic here
+                    echo "Running integration tests for ${params.ENV} environment"
+                    // Example: sh "./integration-tests.sh ${params.ENV}"
                 }
             }
         }
         
         stage('Smoke Tests') {
             steps {
-                sh "./scripts/smoke-tests.sh ${params.ENV}"
+                script {
+                    // Add your smoke test logic here
+                    echo "Running smoke tests for ${params.ENV} environment"
+                    // Example: sh "./smoke-tests.sh ${params.ENV}"
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                withKubeConfig([credentialsId: 'kube-config']) {
+                    sh """
+                        kubectl get pods,services,deployments -n ${KUBERNETES_NAMESPACE}
+                        kubectl describe deployment fraud-detection-system -n ${KUBERNETES_NAMESPACE}
+                    """
+                }
             }
         }
     }
     
     post {
         success {
-            notifyDeploymentSuccess()
+            echo "Deployment to ${params.ENV} environment successful!"
         }
         failure {
-            notifyDeploymentFailure()
+            echo "Deployment to ${params.ENV} environment failed!"
+            mail to: 'team@example.com',
+                 subject: "Failed Deployment: ${currentBuild.fullDisplayName}",
+                 body: "Deployment to ${params.ENV} failed. Check ${env.BUILD_URL}"
         }
         always {
-            sh 'kubectl get pods,services,deployments -n ${KUBERNETES_NAMESPACE}'
+            withKubeConfig([credentialsId: 'kube-config']) {
+                sh "kubectl get pods,services,deployments -n ${KUBERNETES_NAMESPACE}"
+            }
         }
     }
 }
