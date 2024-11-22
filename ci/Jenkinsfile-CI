@@ -16,7 +16,6 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
-        REPO_ACCESS_TOKEN = credentials('REPO_ACCESS_TOKEN') // Ensure this is set up in Jenkins
         SONAR_TOKEN = credentials('sonar-token')
     }
     
@@ -32,14 +31,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    def gitUrl = "https://${REPO_ACCESS_TOKEN}@github.com/henryhcleung/FraudDetectionSystem.git"
-                    checkout([$class: 'GitSCM', 
-                        branches: [[name: "*/${params.BRANCH}"]], 
-                        userRemoteConfigs: [[url: gitUrl]],
-                        extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
-                    ])
-                }
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: "*/${params.BRANCH}"]], 
+                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git']],
+                    extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
+                ])
             }
         }
         
