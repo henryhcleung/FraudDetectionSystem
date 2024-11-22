@@ -1,14 +1,15 @@
-name: Continuous Deployment
+name: Deploy and Release
 
 on:
   workflow_run:
-    workflows: ["CI/CD Pipeline"]
+    workflows: ["Build and Test"]
     types:
       - completed
 
 jobs:
   docker-build-push:
     runs-on: ubuntu-latest
+    needs: build-and-test
     steps:
       - uses: actions/checkout@v4
 
