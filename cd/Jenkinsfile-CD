@@ -54,7 +54,6 @@ pipeline {
         stage('Run Integration Tests') {
             steps {
                 script {
-                    // Add your integration test logic here
                     echo "Running integration tests for ${params.ENV} environment"
                     // Example: sh "./integration-tests.sh ${params.ENV}"
                 }
@@ -64,7 +63,6 @@ pipeline {
         stage('Smoke Tests') {
             steps {
                 script {
-                    // Add your smoke test logic here
                     echo "Running smoke tests for ${params.ENV} environment"
                     // Example: sh "./smoke-tests.sh ${params.ENV}"
                 }
@@ -89,7 +87,7 @@ pipeline {
         }
         failure {
             echo "Deployment to ${params.ENV} environment failed!"
-            mail to: 'team@example.com',
+            mail to: 'henryleunghc@gmail.com',
                  subject: "Failed Deployment: ${currentBuild.fullDisplayName}",
                  body: "Deployment to ${params.ENV} failed. Check ${env.BUILD_URL}"
         }
