@@ -7,8 +7,8 @@ pipeline {
     }
     
     environment {
-        JAVA_VERSION = 'JDK17'
-        MAVEN_VERSION = '3.8.4'
+        JAVA_VERSION = 'JDK17'  // Ensure this matches your JDK installation name
+        MAVEN_VERSION = 'maven-3.8.4'  // Ensure this matches your Maven installation name
         JAVA_HOME = tool "${JAVA_VERSION}"
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
@@ -41,7 +41,7 @@ pipeline {
         
         stage('Build and Analyze') {
             steps {
-                withMaven(maven: "maven-${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}") {
                     sh """
                         mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
@@ -55,7 +55,7 @@ pipeline {
         
         stage('Unit Tests') {
             steps {
-                withMaven(maven: "maven-${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}") {
                     sh 'mvn test'
                 }
             }
@@ -68,7 +68,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                withMaven(maven: "maven-${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}") {
                     sh 'mvn verify -DskipUnitTests'
                 }
             }
@@ -81,7 +81,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                withMaven(maven: "maven-${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}") {
                     sh 'mvn jacoco:report'
                 }
                 publishHTML(target: [
@@ -94,7 +94,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                withMaven(maven: "maven-${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}") {
                     sh 'mvn org.owasp:dependency-check-maven:check'
                 }
                 publishHTML(target: [
