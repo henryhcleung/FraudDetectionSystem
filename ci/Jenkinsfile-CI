@@ -4,7 +4,7 @@ pipeline {
     environment {
         JAVA_VERSION = '11'
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
-        DOCKER_IMAGE = 'fraud-detection-system'
+        DOCKER_IMAGE = 'henryleungdemotest/fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         SONAR_PROJECT_KEY = 'FraudDetectionSystem'
     }
@@ -13,12 +13,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-            }
-        }
-        
-        stage('Environment Check') {
-            steps {
-                sh './scripts/utility-scripts.sh'
             }
         }
         
@@ -36,7 +30,9 @@ pipeline {
         
         stage('Static Code Analysis') {
             steps {
-                sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+                withSonarQubeEnv('SonarQube') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+                }
             }
         }
         
@@ -76,12 +72,6 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        success {
-            echo 'CI pipeline completed successfully'
-        }
-        failure {
-            echo 'CI pipeline failed'
         }
     }
 }
