@@ -27,7 +27,8 @@ pipeline {
     }
     
     tools {
-        git 'Default' // Ensure this matches the name in Jenkins Global Tool Configuration
+        jdk "${JAVA_VERSION}" // Ensure this matches the name in Jenkins Global Tool Configuration
+        maven "${MAVEN_VERSION}"
     }
     
     stages {
