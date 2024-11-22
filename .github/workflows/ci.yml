@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FraudDetectionSystem
-          path: target/*.jar
+          path: target/FraudDetectionSystem-1.0-SNAPSHOT.jar
           retention-days: 1
 
   security-scan:
@@ -67,3 +67,13 @@ jobs:
           name: dependency-check-report
           path: ${{github.workspace}}/reports
           retention-days: 1
+
+  trigger-cd:
+    needs: [build-and-test, security-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger CD Workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: trigger-cd

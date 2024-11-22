@@ -1,15 +1,12 @@
 name: Deploy and Release
 
 on:
-  workflow_run:
-    workflows: ["Build and Test"]
-    types:
-      - completed
+  repository_dispatch:
+    types: [trigger-cd]
 
 jobs:
   docker-build-push:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
 
