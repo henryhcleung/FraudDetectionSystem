@@ -21,7 +21,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>        
+        <maven.compiler.target>17</maven.compiler.target>
         <java.version>17</java.version>
         <sonar.projectKey>henryhcleung_FraudDetectionSystem</sonar.projectKey>
         <sonar.organization>henryhcleung</sonar.organization>
@@ -180,6 +180,6 @@
                     <reportsDirectory>${project.build.directory}/failsafe-reports</reportsDirectory>
                 </configuration>
             </plugin>
-        </plugins>        
+        </plugins>
     </build>
 </project>
