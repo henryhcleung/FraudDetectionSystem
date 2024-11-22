@@ -32,9 +32,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    git branch: params.BRANCH, url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'git-credentials'
-                }
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: "*/${params.BRANCH}"]], 
+                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'git-credentials']],
+                    extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
+                ])
             }
         }
         
