@@ -7,8 +7,10 @@ pipeline {
     }
     
     environment {
-        JAVA_VERSION = 'JDK17'
-        MAVEN_VERSION = 'maven-3.8.4'
+        JAVA_HOME = tool 'JDK17'
+        PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
+        MAVEN_HOME = tool 'maven-3.8.4'
+        PATH = "${env.MAVEN_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -18,49 +20,29 @@ pipeline {
     options {
         timeout(time: 1, unit: 'HOURS')
         disableConcurrentBuilds()
+        ansiColor('xterm')
     }
     
     triggers {
         cron('0 0 * * *') // Daily at midnight UTC
     }
     
-    tools {
-        jdk "${JAVA_VERSION}" // Ensure this matches the name in Jenkins Global Tool Configuration
-        maven "${MAVEN_VERSION}"
-    }
-    
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: "*/${params.BRANCH}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git']],
-                    extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
-                ])
+                checkout scm
             }
         }
         
-        stage('Build and Analyze') {
+        stage('Build') {
             steps {
-                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
-                    withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            mvn -B -s custom-settings.xml verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.organization=henryhcleung \
-                            -Dsonar.host.url=https://sonarcloud.io \
-                            -Dsonar.login=${SONAR_TOKEN}
-                        '''
-                    }
-                }
+                sh 'mvn clean package -DskipTests'
             }
         }
         
         stage('Unit Tests') {
             steps {
-                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
-                    sh 'mvn -s custom-settings.xml test'
-                }
+                sh 'mvn test'
             }
             post {
                 always {
@@ -71,13 +53,19 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
-                    sh 'mvn -s custom-settings.xml verify -DskipUnitTests'
-                }
+                sh 'mvn verify -DskipUnitTests'
             }
             post {
                 always {
                     junit '**/target/failsafe-reports/*.xml'
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarCloud') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
@@ -96,9 +84,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                withEnv(["JAVA_HOME=${tool name: JAVA_VERSION, type: 'jdk'}", "PATH=${tool name: JAVA_VERSION, type: 'jdk'}/bin:${env.PATH}"]) {
-                    sh 'mvn -s custom-settings.xml jacoco:report'
-                }
+                sh 'mvn jacoco:report'
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -109,7 +95,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh './scripts/dependency-check.sh'
+                sh 'mvn org.owasp:dependency-check-maven:check'
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
