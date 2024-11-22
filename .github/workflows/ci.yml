@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC 
 
 env:
   JAVA_VERSION: '11'
