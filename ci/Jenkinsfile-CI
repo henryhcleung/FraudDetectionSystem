@@ -8,8 +8,8 @@ pipeline {
     
     environment {
         JAVA_HOME = tool 'JDK17'
-        PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
         MAVEN_HOME = tool 'maven-3.8.4'
+        PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.PATH}"
         MAVEN_OPTS = '-Dmaven.compiler.fork=true -Dmaven.compiler.executable=${JAVA_HOME}/bin/javac'
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
@@ -43,13 +43,13 @@ pipeline {
             steps {
                 sh 'java -version'
                 sh 'mvn -version'
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package -DskipTests -s custom-settings.xml'
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh 'mvn test'
+                sh 'mvn test -s custom-settings.xml'
             }
             post {
                 always {
@@ -60,7 +60,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh 'mvn verify -DskipUnitTests'
+                sh 'mvn verify -DskipUnitTests -s custom-settings.xml'
             }
             post {
                 always {
@@ -72,7 +72,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar'
+                    sh 'mvn sonar:sonar -s custom-settings.xml'
                 }
             }
         }
@@ -91,7 +91,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh 'mvn jacoco:report'
+                sh 'mvn jacoco:report -s custom-settings.xml'
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -102,7 +102,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh 'mvn org.owasp:dependency-check-maven:check'
+                sh 'mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
