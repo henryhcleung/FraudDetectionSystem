@@ -40,7 +40,7 @@ pipeline {
         stage('Build and Analyze') {
             steps {
                 withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
+                    withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
                         sh """
                             mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
@@ -55,7 +55,7 @@ pipeline {
         
         stage('Unit Tests') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
+                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
                     sh 'mvn test'
                 }
             }
@@ -68,7 +68,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
+                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
                     sh 'mvn verify -DskipUnitTests'
                 }
             }
@@ -93,7 +93,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
+                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
                     sh 'mvn jacoco:report'
                 }
                 publishHTML(target: [
