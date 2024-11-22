@@ -132,9 +132,7 @@ pipeline {
     
     post {
         always {
-            script {
-                cleanWs()
-            }
+            cleanWs()
         }
         success {
             echo 'CI pipeline completed successfully!'
