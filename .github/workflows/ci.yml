@@ -34,12 +34,15 @@ jobs:
       - name: Build and test
         run: mvn clean package
 
+      - name: List build output
+        run: ls -la target
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: FraudDetectionSystem
           path: target/FraudDetectionSystem-*.jar
-          retention-days: 5  # Ensure the artifact is retained for a sufficient period
+          retention-days: 5
 
 
 # name: CI/CD Pipeline

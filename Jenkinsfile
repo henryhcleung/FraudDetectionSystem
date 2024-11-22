@@ -92,7 +92,6 @@ pipeline {
                     echo 'Running tests...'
                     sh 'kubectl get pods'
                     sh 'kubectl get services'
-                    // Add more specific tests related to your application
                     sh 'curl -f http://localhost:8080/health || exit 1'
                 }
             }
