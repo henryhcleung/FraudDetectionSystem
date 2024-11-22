@@ -1,10 +1,17 @@
+@Library('my-shared-library') _
+
 pipeline {
     agent { label 'microservice-deploy-agent-1' }
     
+    parameters {
+        string(name: 'BUILD_NUMBER', description: 'Build number to deploy')
+        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Environment to deploy to')
+    }
+    
     environment {
-        KUBERNETES_NAMESPACE = 'fraud-detection'
+        KUBERNETES_NAMESPACE = "fraud-detection-${params.ENV}"
         DOCKER_IMAGE = 'fraud-detection-system'
-        DOCKER_TAG = "${params.BUILD_NUMBER}"
+        DOCKER_TAG = "${params.BUILD_NUMBER}-${params.ENV}"
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
     }
     
@@ -18,7 +25,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 withKubeConfig([credentialsId: 'kube-config']) {
-                    sh './cd/deploy.sh'
+                    sh "./cd/deploy.sh ${params.ENV}"
                 }
             }
         }
@@ -26,34 +33,27 @@ pipeline {
         stage('Run Integration Tests') {
             steps {
                 script {
-                    sh '''
-                        kubectl get pods -n ${KUBERNETES_NAMESPACE}
-                        kubectl get services -n ${KUBERNETES_NAMESPACE}
-                        kubectl port-forward service/fraud-detection-system 8080:80 -n ${KUBERNETES_NAMESPACE} &
-                        sleep 10
-                        curl -f http://localhost:8080/health || exit 1
-                    '''
+                    runIntegrationTests()
                 }
             }
         }
         
         stage('Smoke Tests') {
             steps {
-                sh './scripts/smoke-tests.sh'
+                sh "./scripts/smoke-tests.sh ${params.ENV}"
             }
         }
     }
     
     post {
         success {
-            echo 'Deployment successful!'
+            notifyDeploymentSuccess()
         }
         failure {
-            echo 'Deployment failed!'
-            sh 'kubectl logs -l app=fraud-detection-system --tail=100'
+            notifyDeploymentFailure()
         }
         always {
-            sh 'kubectl get pods,services,deployments'
+            sh 'kubectl get pods,services,deployments -n ${KUBERNETES_NAMESPACE}'
         }
     }
 }
