@@ -4,6 +4,9 @@ on:
   repository_dispatch:
     types: [trigger-cd]
 
+env:
+  KUBERNETES_NAMESPACE: fraud-detection
+
 jobs:
   download-artifact:
     runs-on: ubuntu-latest
@@ -62,18 +65,24 @@ jobs:
           sudo mv ./kind /usr/local/bin/kind
       - name: Create Kind cluster
         run: kind create cluster
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Create namespace
+        run: kubectl create namespace ${{ env.KUBERNETES_NAMESPACE }}
       - name: Deploy to Kind
         run: |
-          kubectl apply -f k8s/configmap.yaml
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/configmap.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl apply -f k8s/deployment.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl apply -f k8s/service.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/fraud-detection-system -n ${{ env.KUBERNETES_NAMESPACE }} --timeout=300s
       - name: Run tests
         run: |
           echo "Running tests..."
-          kubectl get pods
-          kubectl get services
-          kubectl wait --for=condition=ready pod -l app=fraud-detection-system --timeout=300s
-          kubectl port-forward service/fraud-detection-system 8080:8080 &
+          kubectl get pods -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl get services -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl port-forward service/fraud-detection-system 8080:80 -n ${{ env.KUBERNETES_NAMESPACE }} &
           sleep 10
           curl -f http://localhost:8080/health || exit 1
 
