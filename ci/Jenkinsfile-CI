@@ -7,9 +7,10 @@ pipeline {
     }
     
     environment {
-        JAVA_HOME = tool name: 'JDK17', type: 'jdk'
+        SDKMAN_DIR = "/var/jenkins/.sdkman"
+        JAVA_HOME = "${SDKMAN_DIR}/candidates/java/current"
         MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
-        PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.PATH}"
+        PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -26,11 +27,6 @@ pipeline {
         cron('0 0 * * *') // Daily at midnight UTC
     }
     
-    tools {
-        jdk 'JDK17'
-        maven 'maven-3.8.4'
-    }
-    
     stages {
         stage('Checkout') {
             steps {
@@ -41,6 +37,8 @@ pipeline {
         stage('Environment Setup') {
             steps {
                 sh '''
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk use java 17.0.12-jbr
                     echo "JAVA_HOME: $JAVA_HOME"
                     echo "PATH: $PATH"
                     java -version
@@ -51,13 +49,13 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package -DskipTests -s custom-settings.xml'
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh 'mvn test'
+                sh 'mvn test -s custom-settings.xml'
             }
             post {
                 always {
@@ -68,7 +66,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh 'mvn verify -DskipUnitTests'
+                sh 'mvn verify -DskipUnitTests -s custom-settings.xml'
             }
             post {
                 always {
@@ -80,7 +78,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar'
+                    sh 'mvn sonar:sonar -s custom-settings.xml'
                 }
             }
         }
@@ -101,7 +99,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh 'mvn jacoco:report'
+                sh 'mvn jacoco:report -s custom-settings.xml'
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -112,7 +110,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh 'mvn org.owasp:dependency-check-maven:check'
+                sh 'mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
