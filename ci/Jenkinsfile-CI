@@ -16,7 +16,7 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
-        GITHUB_TOKEN = credentials('github-token')
+        REPO_ACCESS_TOKEN = credentials('REPO_ACCESS_TOKEN') // Use personal access token
         SONAR_TOKEN = credentials('sonar-token')
     }
     
@@ -32,17 +32,19 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: "*/${params.BRANCH}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'git-credentials']],
-                    extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
-                ])
+                script {
+                    def gitUrl = "https://${REPO_ACCESS_TOKEN}@github.com/henryhcleung/FraudDetectionSystem.git"
+                    checkout([$class: 'GitSCM', 
+                        branches: [[name: "*/${params.BRANCH}"]], 
+                        userRemoteConfigs: [[url: gitUrl]],
+                        extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
+                    ])
+                }
             }
         }
         
         stage('Cache') {
             steps {
-                // Ensure the cache plugin is installed and configured
                 cache(path: "${HOME}/.m2/repository", key: "${env.JOB_NAME}-${env.BRANCH_NAME}-maven-cache")
                 cache(path: "${HOME}/.sonar/cache", key: "${env.JOB_NAME}-${env.BRANCH_NAME}-sonar-cache")
             }
