@@ -10,7 +10,7 @@ pipeline {
         JAVA_HOME = tool 'JDK17'
         PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
         MAVEN_HOME = tool 'maven-3.8.4'
-        PATH = "${env.MAVEN_HOME}/bin:${env.PATH}"
+        MAVEN_OPTS = '-Dmaven.compiler.fork=true -Dmaven.compiler.executable=${JAVA_HOME}/bin/javac'
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -27,6 +27,11 @@ pipeline {
         cron('0 0 * * *') // Daily at midnight UTC
     }
     
+    tools {
+        jdk 'JDK17'
+        maven 'maven-3.8.4'
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -36,6 +41,8 @@ pipeline {
         
         stage('Build') {
             steps {
+                sh 'java -version'
+                sh 'mvn -version'
                 sh 'mvn clean package -DskipTests'
             }
         }
