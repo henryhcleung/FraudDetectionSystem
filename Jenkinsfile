@@ -89,6 +89,10 @@ pipeline {
                 script {
                     echo 'Deploying and testing the application...'
                     sh './scripts/deploy.sh'
+                    echo 'Running tests...'
+                    sh 'kubectl get pods'
+                    sh 'kubectl get services'
+                    // Add more specific tests related to your application
                 }
             }
         }
