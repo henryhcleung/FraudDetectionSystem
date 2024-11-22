@@ -16,7 +16,7 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
-        REPO_ACCESS_TOKEN = credentials('REPO_ACCESS_TOKEN') // Use personal access token
+        REPO_ACCESS_TOKEN = credentials('REPO_ACCESS_TOKEN') // Ensure this is set up in Jenkins
         SONAR_TOKEN = credentials('sonar-token')
     }
     
