@@ -7,9 +7,7 @@ pipeline {
     }
     
     environment {
-        JAVA_HOME = tool name: 'JDK17', type: 'jdk'
-        MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
-        PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.PATH}"
+        SDKMAN_DIR = "/var/jenkins/.sdkman"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -26,11 +24,6 @@ pipeline {
         cron('0 0 * * *') // Daily at midnight UTC
     }
     
-    tools {
-        jdk 'JDK17'
-        maven 'maven-3.8.4'
-    }
-    
     stages {
         stage('Checkout') {
             steps {
@@ -38,24 +31,44 @@ pipeline {
             }
         }
         
+        stage('Setup SDKMAN') {
+            steps {
+                sh '''
+                    curl -s "https://get.sdkman.io" | bash
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env install
+                '''
+            }
+        }
+        
         stage('Environment Setup') {
             steps {
-                sh 'echo $JAVA_HOME'
-                sh 'echo $PATH'
-                sh '$JAVA_HOME/bin/java -version'
-                sh '$MAVEN_HOME/bin/mvn -version'
+                sh '''
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env
+                    java -version
+                    mvn -version
+                '''
             }
         }
         
         stage('Build') {
             steps {
-                sh '$MAVEN_HOME/bin/mvn clean package -DskipTests -s custom-settings.xml'
+                sh '''
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env
+                    mvn clean package -DskipTests -s custom-settings.xml
+                '''
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh '$MAVEN_HOME/bin/mvn test -s custom-settings.xml'
+                sh '''
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env
+                    mvn test -s custom-settings.xml
+                '''
             }
             post {
                 always {
@@ -66,7 +79,11 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh '$MAVEN_HOME/bin/mvn verify -DskipUnitTests -s custom-settings.xml'
+                sh '''
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env
+                    mvn verify -DskipUnitTests -s custom-settings.xml
+                '''
             }
             post {
                 always {
@@ -78,7 +95,11 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh '$MAVEN_HOME/bin/mvn sonar:sonar -s custom-settings.xml'
+                    sh '''
+                        source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                        sdk env
+                        mvn sonar:sonar -s custom-settings.xml
+                    '''
                 }
             }
         }
@@ -99,7 +120,11 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh '$MAVEN_HOME/bin/mvn jacoco:report -s custom-settings.xml'
+                sh '''
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env
+                    mvn jacoco:report -s custom-settings.xml
+                '''
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -110,7 +135,11 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh '$MAVEN_HOME/bin/mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
+                sh '''
+                    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+                    sdk env
+                    mvn org.owasp:dependency-check-maven:check -s custom-settings.xml
+                '''
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
