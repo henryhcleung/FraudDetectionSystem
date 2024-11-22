@@ -40,21 +40,26 @@ pipeline {
         
         stage('Build and Analyze') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}") {
-                    sh """
-                        mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.organization=henryhcleung \
-                        -Dsonar.host.url=https://sonarcloud.io \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    """
+                withMaven(
+                    maven: "${MAVEN_VERSION}",
+                    mavenSettingsConfig: 'your-maven-settings-config-id',
+                    mavenLocalRepo: '.repository'
+                ) {
+                    withSonarQubeEnv('SonarCloud') {
+                        sh """
+                            mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                            -Dsonar.organization=henryhcleung \
+                            -Dsonar.host.url=https://sonarcloud.io
+                        """
+                    }
                 }
             }
         }
         
         stage('Unit Tests') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
                     sh 'mvn test'
                 }
             }
@@ -67,7 +72,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
                     sh 'mvn verify -DskipUnitTests'
                 }
             }
@@ -92,7 +97,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}") {
+                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-maven-settings-config-id') {
                     sh 'mvn jacoco:report'
                 }
                 publishHTML(target: [

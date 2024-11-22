@@ -25,6 +25,14 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>spring-releases</id>
+            <name>Spring Releases</name>
+            <url>https://repo.spring.io/release</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <!-- Spring Boot Starter Dependencies -->
         <dependency>
