@@ -2,11 +2,12 @@ pipeline {
     agent { label 'microservice-build-agent-1' }
     
     environment {
-        JAVA_VERSION = '11'
+        JAVA_VERSION = '17.0.1-zulu'
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
-        DOCKER_IMAGE = 'henryleungdemotest/fraud-detection-system'
+        DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         SONAR_PROJECT_KEY = 'FraudDetectionSystem'
+        DOCKER_USERNAME = credentials('docker-hub-username')
     }
     
     stages {
@@ -16,10 +17,18 @@ pipeline {
             }
         }
         
+        stage('Setup Java') {
+            steps {
+                sh '''
+                    export SDKMAN_DIR="$HOME/.sdkman"
+                    [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+                    sdk use java ${JAVA_VERSION}
+                '''
+            }
+        }
+        
         stage('Build') {
             steps {
-                sh 'echo $DOCKER_USERNAME'
-                sh 'chmod +x ./ci/build.sh'
                 sh './ci/build.sh'
             }
         }
@@ -32,15 +41,12 @@ pipeline {
         
         stage('Static Code Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
-                }
+                sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
             }
         }
         
         stage('Dependency Check') {
             steps {
-                sh 'chmod +x ./scripts/dependency-check.sh'
                 sh './scripts/dependency-check.sh'
             }
         }
@@ -75,9 +81,6 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        failure {
-            echo 'Pipeline failed! Check the logs for details.'
         }
     }
 }

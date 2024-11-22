@@ -10,6 +10,13 @@ if [ -z "$DOCKER_USERNAME" ]; then
   exit 1
 fi
 
+# Use a project-specific Java version without changing the global setting
+export JAVA_HOME=$HOME/.sdkman/candidates/java/17.0.8-tem
+export PATH=$JAVA_HOME/bin:$PATH
+
+# Verify Java version
+java -version
+
 # Build the application
 echo "Building the application..."
 mvn clean package

@@ -3,8 +3,9 @@ pipeline {
     
     environment {
         KUBERNETES_NAMESPACE = 'fraud-detection'
-        DOCKER_IMAGE = 'henryleungdemotest/fraud-detection-system'
+        DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${params.BUILD_NUMBER}"
+        DOCKER_USERNAME = credentials('docker-hub-username')
     }
     
     stages {
