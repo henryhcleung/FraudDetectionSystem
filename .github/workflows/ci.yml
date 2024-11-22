@@ -44,6 +44,11 @@ jobs:
           path: target/FraudDetectionSystem-*.jar
           retention-days: 5
 
+  post:
+    failure:
+      - name: Notify on failure
+        run: echo "CI failed. Please check the logs."
+
 
 # name: CI/CD Pipeline
 
