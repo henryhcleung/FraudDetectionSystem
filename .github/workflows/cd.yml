@@ -67,4 +67,6 @@ jobs:
           echo "Running tests..."
           kubectl get pods
           kubectl get services
+          # Add more specific tests related to your application
+          # Example: Check if the application is responding
           curl -f http://localhost:8080/health || exit 1
