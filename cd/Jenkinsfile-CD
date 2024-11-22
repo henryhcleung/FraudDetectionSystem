@@ -1,0 +1,70 @@
+pipeline {
+    agent { label 'microservice-deploy-agent-1' }
+    
+    environment {
+        KUBERNETES_NAMESPACE = 'fraud-detection'
+        DOCKER_IMAGE = 'fraud-detection-system'
+        DOCKER_TAG = "${params.BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'kube-config']) {
+                        sh './cd/deploy.sh'
+                    }
+                }
+            }
+        }
+        
+        stage('Run Integration Tests') {
+            steps {
+                script {
+                    sh '''
+                        kubectl get pods -n ${KUBERNETES_NAMESPACE}
+                        kubectl get services -n ${KUBERNETES_NAMESPACE}
+                        kubectl port-forward service/fraud-detection-system 8080:80 -n ${KUBERNETES_NAMESPACE} &
+                        sleep 10
+                        curl -f http://localhost:8080/actuator/health || exit 1
+                    '''
+                }
+            }
+        }
+        
+        stage('Smoke Tests') {
+            steps {
+                script {
+                    sh './scripts/smoke-tests.sh'
+                }
+            }
+        }
+        
+        stage('Performance Tests') {
+            steps {
+                script {
+                    sh './scripts/performance-tests.sh'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
+            sh 'kubectl logs -l app=fraud-detection-system --tail=100'
+        }
+        always {
+            sh 'kubectl get pods,services,deployments'
+        }
+    }
+}

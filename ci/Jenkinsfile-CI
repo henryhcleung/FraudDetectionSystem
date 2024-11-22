@@ -1,0 +1,87 @@
+pipeline {
+    agent { label 'microservice-build-agent-1' }
+    
+    environment {
+        JAVA_VERSION = '11'
+        ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
+        DOCKER_IMAGE = 'fraud-detection-system'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        SONAR_PROJECT_KEY = 'FraudDetectionSystem'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Environment Check') {
+            steps {
+                sh './scripts/utility-scripts.sh'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh './ci/build.sh'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        
+        stage('Static Code Analysis') {
+            steps {
+                sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+            }
+        }
+        
+        stage('Dependency Check') {
+            steps {
+                sh './scripts/dependency-check.sh'
+            }
+        }
+        
+        stage('Package') {
+            steps {
+                sh 'mvn package -DskipTests'
+                archiveArtifacts artifacts: "target/${ARTIFACT_NAME}", fingerprint: true
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                }
+            }
+        }
+        
+        stage('Docker Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push("latest")
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'CI pipeline completed successfully'
+        }
+        failure {
+            echo 'CI pipeline failed'
+        }
+    }
+}
