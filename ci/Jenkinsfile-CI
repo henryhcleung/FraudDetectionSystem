@@ -10,6 +10,7 @@ pipeline {
         JAVA_HOME = tool 'JDK17'
         MAVEN_HOME = tool 'maven-3.8.4'
         PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.PATH}"
+        MAVEN_OPTS = "-Dmaven.compiler.fork=true -Dmaven.compiler.executable=${env.JAVA_HOME}/bin/javac"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -42,20 +43,20 @@ pipeline {
             steps {
                 sh 'echo $JAVA_HOME'
                 sh 'echo $PATH'
-                sh 'java -version'
-                sh 'mvn -version'
+                sh '$JAVA_HOME/bin/java -version'
+                sh '$MAVEN_HOME/bin/mvn -version'
             }
         }
         
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests -s custom-settings.xml'
+                sh '$MAVEN_HOME/bin/mvn clean package -DskipTests -s custom-settings.xml'
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh 'mvn test -s custom-settings.xml'
+                sh '$MAVEN_HOME/bin/mvn test -s custom-settings.xml'
             }
             post {
                 always {
@@ -66,7 +67,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                sh 'mvn verify -DskipUnitTests -s custom-settings.xml'
+                sh '$MAVEN_HOME/bin/mvn verify -DskipUnitTests -s custom-settings.xml'
             }
             post {
                 always {
@@ -78,7 +79,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar -s custom-settings.xml'
+                    sh '$MAVEN_HOME/bin/mvn sonar:sonar -s custom-settings.xml'
                 }
             }
         }
@@ -99,7 +100,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                sh 'mvn jacoco:report -s custom-settings.xml'
+                sh '$MAVEN_HOME/bin/mvn jacoco:report -s custom-settings.xml'
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
@@ -110,7 +111,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh 'mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
+                sh '$MAVEN_HOME/bin/mvn org.owasp:dependency-check-maven:check -s custom-settings.xml'
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
@@ -150,3 +151,4 @@ pipeline {
         }
     }
 }
+```
