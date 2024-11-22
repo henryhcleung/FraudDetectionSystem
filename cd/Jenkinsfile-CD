@@ -5,7 +5,7 @@ pipeline {
         KUBERNETES_NAMESPACE = 'fraud-detection'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${params.BUILD_NUMBER}"
-        DOCKER_USERNAME = credentials('docker-hub-username')
+        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
     }
     
     stages {
@@ -17,10 +17,8 @@ pipeline {
         
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    withKubeConfig([credentialsId: 'kube-config']) {
-                        sh './cd/deploy.sh'
-                    }
+                withKubeConfig([credentialsId: 'kube-config']) {
+                    sh './cd/deploy.sh'
                 }
             }
         }
@@ -41,9 +39,7 @@ pipeline {
         
         stage('Smoke Tests') {
             steps {
-                script {
-                    sh './scripts/smoke-tests.sh'
-                }
+                sh './scripts/smoke-tests.sh'
             }
         }
     }
