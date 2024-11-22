@@ -4,6 +4,12 @@ set -e
 # Ensure the script is run from the project root
 cd "$(dirname "$0")/.."
 
+# Load SDKMAN
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Use the project-specific Java version
+sdk use java 17.0.8-tem
+
 # Variables
 DOCKER_USERNAME="henryleungdemotest"
 IMAGE_TAG="latest"
