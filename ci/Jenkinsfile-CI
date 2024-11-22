@@ -7,9 +7,9 @@ pipeline {
     }
     
     environment {
-        JAVA_VERSION = 'JDK17'  // Ensure this matches your JDK installation name
-        MAVEN_VERSION = 'maven-3.8.4'  // Ensure this matches your Maven installation name
-        JAVA_HOME = tool "${JAVA_VERSION}"
+        JAVA_VERSION = 'JDK17'
+        MAVEN_VERSION = 'maven-3.8.4'
+        JAVA_HOME = tool("${JAVA_VERSION}")
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
@@ -79,6 +79,18 @@ pipeline {
             }
         }
         
+        stage('Performance Tests') {
+            steps {
+                sh './scripts/performance-tests.sh'
+            }
+        }
+        
+        stage('Smoke Tests') {
+            steps {
+                sh './scripts/smoke-tests.sh'
+            }
+        }
+        
         stage('Code Coverage') {
             steps {
                 withMaven(maven: "${MAVEN_VERSION}") {
@@ -94,9 +106,7 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}") {
-                    sh 'mvn org.owasp:dependency-check-maven:check'
-                }
+                sh './scripts/dependency-check.sh'
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
