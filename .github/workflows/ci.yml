@@ -1,10 +1,11 @@
-name: Continuous Integration
+name: SonarQube Cloud
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    types: [opened, synchronize, reopened]
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
 
@@ -18,53 +19,38 @@ permissions:
   actions: read
 
 jobs:
-  build-and-test:
+  build:
+    name: Build and analyze
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Cache SonarQube packages
+          java-version: 17
+          distribution: 'zulu'
+      - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=fraud-detection-system
-
-      - name: List build output
-        run: ls -la target
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: FraudDetectionSystem
-          path: target/FraudDetectionSystem-1.0-SNAPSHOT.jar
-          retention-days: 1
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=henryhcleung_FraudDetectionSystem
 
   security-scan:
-    needs: build-and-test
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +68,7 @@ jobs:
           retention-days: 1
 
   trigger-cd:
-    needs: [build-and-test, security-scan]
+    needs: [build, security-scan]
     runs-on: ubuntu-latest
     steps:
       - name: Trigger CD Workflow
