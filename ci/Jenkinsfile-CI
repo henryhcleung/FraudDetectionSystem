@@ -33,7 +33,7 @@ pipeline {
             steps {
                 checkout([$class: 'GitSCM', 
                     branches: [[name: "*/${params.BRANCH}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'your-git-credentials-id']],
+                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'github-credentials']],
                     extensions: [[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]]
                 ])
             }
