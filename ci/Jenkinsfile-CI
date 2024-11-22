@@ -1,4 +1,4 @@
-@Library('my-shared-library') _
+@Library('my-shared-library@main') _
 
 pipeline {
     agent { label 'microservice-build-agent-1' }
@@ -10,7 +10,7 @@ pipeline {
     
     environment {
         JAVA_HOME = tool 'JDK17'
-        PATH = "${JAVA_HOME}/bin:${PATH}"
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
@@ -23,7 +23,7 @@ pipeline {
             steps {
                 checkout([$class: 'GitSCM', 
                     branches: [[name: "*/${params.BRANCH}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/your-repo/FraudDetectionSystem.git', credentialsId: 'git-credentials']]
+                    userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git', credentialsId: 'git-credentials']]
                 ])
             }
         }
