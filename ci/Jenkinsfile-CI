@@ -108,18 +108,20 @@ pipeline {
         }
     }
     
-    post {
-        always {
-            cleanWs()
-        }
-        success {
-            echo 'CI pipeline completed successfully!'
-        }
-        failure {
-            echo 'CI pipeline failed!'
-            mail to: 'henryleunghc@gmail.com',
-                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                 body: "Something is wrong with ${env.BUILD_URL}"
-        }
-    }
+   post {
+       always {
+           junit 'target/surefire-reports/*.xml'
+           junit 'target/failsafe-reports/*.xml'
+           cleanWs()
+       }
+       success {
+           echo 'CI pipeline completed successfully!'
+       }
+       failure {
+           echo 'CI pipeline failed!'
+           mail to: 'henryleunghc@gmail.com',
+                subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                body: "Something is wrong with ${env.BUILD_URL}"
+       }
+   }
 }
