@@ -18,6 +18,9 @@ jobs:
           name: FraudDetectionSystem
           path: target
 
+      - name: List downloaded artifact
+        run: ls -la target
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
