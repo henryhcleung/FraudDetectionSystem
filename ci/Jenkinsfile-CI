@@ -7,10 +7,9 @@ pipeline {
     }
     
     environment {
-        JAVA_HOME = tool 'JDK17'
-        MAVEN_HOME = tool 'maven-3.8.4'
+        JAVA_HOME = tool name: 'JDK17', type: 'jdk'
+        MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
         PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.PATH}"
-        MAVEN_OPTS = "-Dmaven.compiler.fork=true -Dmaven.compiler.executable=${env.JAVA_HOME}/bin/javac"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
