@@ -42,10 +42,12 @@ jobs:
           name: FraudDetectionSystem
           path: target/FraudDetectionSystem-*.jar
 
-  post:
-    failure:
-      - name: Notify on failure
-        run: echo "CI failed. Please check the logs."
+    # Add a post section within the job to handle failures
+    post:
+      failure:
+        steps:
+          - name: Notify on failure
+            run: echo "CI failed. Please check the logs."
 
 
 # name: CI/CD Pipeline
