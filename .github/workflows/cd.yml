@@ -65,7 +65,6 @@ jobs:
       - name: Run tests
         run: |
           echo "Running tests..."
-          # Example test commands
           kubectl get pods
           kubectl get services
-          # Add more specific tests related to your application
+          curl -f http://localhost:8080/health || exit 1
