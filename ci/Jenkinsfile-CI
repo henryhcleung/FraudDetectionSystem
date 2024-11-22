@@ -29,7 +29,7 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh './ci/build.sh'
+                sh 'mvn clean package -DskipTests'
             }
         }
         
@@ -41,20 +41,15 @@ pipeline {
         
         stage('Static Code Analysis') {
             steps {
-                sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+                withSonarQubeEnv('SonarQube') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+                }
             }
         }
         
         stage('Dependency Check') {
             steps {
-                sh './scripts/dependency-check.sh'
-            }
-        }
-        
-        stage('Package') {
-            steps {
-                sh 'mvn package -DskipTests'
-                archiveArtifacts artifacts: "target/${ARTIFACT_NAME}", fingerprint: true
+                sh 'mvn org.owasp:dependency-check-maven:check'
             }
         }
         
