@@ -40,24 +40,20 @@ pipeline {
         stage('Build and Analyze') {
             steps {
                 withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
-                        sh """
-                            mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.organization=henryhcleung \
-                            -Dsonar.host.url=https://sonarcloud.io \
-                            -Dsonar.login=${SONAR_TOKEN}
-                        """
-                    }
+                    sh """
+                        mvn -B -s custom-settings.xml verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.organization=henryhcleung \
+                        -Dsonar.host.url=https://sonarcloud.io \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
         
         stage('Unit Tests') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
-                    sh 'mvn test'
-                }
+                sh 'mvn -s custom-settings.xml test'
             }
             post {
                 always {
@@ -68,9 +64,7 @@ pipeline {
         
         stage('Integration Tests') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
-                    sh 'mvn verify -DskipUnitTests'
-                }
+                sh 'mvn -s custom-settings.xml verify -DskipUnitTests'
             }
             post {
                 always {
@@ -93,9 +87,7 @@ pipeline {
         
         stage('Code Coverage') {
             steps {
-                withMaven(maven: "${MAVEN_VERSION}", mavenSettingsConfig: 'your-correct-maven-settings-config-id') {
-                    sh 'mvn jacoco:report'
-                }
+                sh 'mvn -s custom-settings.xml jacoco:report'
                 publishHTML(target: [
                     reportDir: 'target/site/jacoco',
                     reportFiles: 'index.html',
