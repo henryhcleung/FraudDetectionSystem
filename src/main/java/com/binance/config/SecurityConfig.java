@@ -6,13 +6,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -20,31 +20,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         this.customUserDetailsService = customUserDetailsService;
     }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(customUserDetailsService)
-            .passwordEncoder(passwordEncoder());
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeRequests()
-                .antMatchers("/login", "/h2-console/**", "/actuator/health").permitAll() // Allow unauthenticated access to these endpoints
-                .anyRequest().authenticated() // Require authentication for all other requests
-            .and()
-            .formLogin()
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/login", "/h2-console/**", "/actuator/health").permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/", true) // Redirect to root URL after login
+                .defaultSuccessUrl("/", true)
                 .permitAll()
-            .and()
-            .logout()
-                .permitAll()
-            .and()
-            .csrf().disable(); // Disable CSRF for testing purposes
+            )
+            .logout(logout -> logout.permitAll())
+            .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions().disable());
 
-        // Allow H2 console to be accessed without frame options restrictions
-        http.headers().frameOptions().disable();
+        return http.build();
     }
 
     @Bean

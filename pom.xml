@@ -23,9 +23,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <java.version>17</java.version>
-        <sonar.projectKey>henryhcleung_FraudDetectionSystem</sonar.projectKey>
-        <sonar.organization>henryhcleung</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>
