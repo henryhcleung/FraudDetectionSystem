@@ -17,14 +17,8 @@ public class SecurityConfig {
                 .requestMatchers("/public/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .permitAll()
-            )
-            .logout(logout -> logout.permitAll())
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.frameOptions().disable());
-
+            .formLogin(form -> form.loginPage("/login").permitAll())
+            .logout(logout -> logout.permitAll());
         return http.build();
     }
 }
