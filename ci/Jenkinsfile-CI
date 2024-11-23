@@ -60,14 +60,6 @@ pipeline {
             }
         }
         
-        stage('Debug NVD API Key') {
-            steps {
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-            sh 'echo "NVD API Key is set: ${NVD_API_KEY != \'\'}"'
-        }
-            }
-        }
-        
         stage('Build') {
             steps {
                 sh 'mvn clean package -DskipTests -s custom-settings.xml'
