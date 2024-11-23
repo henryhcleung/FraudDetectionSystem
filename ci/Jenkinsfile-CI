@@ -15,7 +15,7 @@ pipeline {
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
-        NVD_API_KEY = credentials('nvd-api-key') // Ensure this matches the ID in Jenkins credentials
+        NVD_API_KEY = credentials('nvd-api-key')
     }
     
     options {
@@ -25,7 +25,7 @@ pipeline {
     }
     
     triggers {
-        cron('0 0 * * *') // Daily at midnight UTC
+        cron('0 0 * * *')
     }
     
     stages {
