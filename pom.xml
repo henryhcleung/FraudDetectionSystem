@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.5</version>
+        <version>3.1.4</version> <!-- Updated to the latest stable version -->
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -27,14 +27,6 @@
         <sonar.organization>henryhcleung</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>spring-releases</id>
-            <name>Spring Releases</name>
-            <url>https://repo.spring.io/release</url>
-        </repository>
-    </repositories>
 
     <dependencies>
         <!-- Spring Boot Starter Dependencies -->
@@ -61,6 +53,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
+            <version>2.2.220</version> <!-- Updated to a version without known vulnerabilities -->
         </dependency>
 
         <!-- Spring Security -->
@@ -86,7 +79,12 @@
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-            <version>3.20.0-GA</version>
+            <version>3.29.0-GA</version> <!-- Updated to a version without known vulnerabilities -->
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.0</version> <!-- Updated to a version without known vulnerabilities -->
         </dependency>
     </dependencies>
 
@@ -95,9 +93,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>com.binance.FraudDetectionSystemApplication</mainClass>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -116,7 +111,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.7</version>
+                <version>0.8.8</version>
                 <executions>
                     <execution>
                         <goals>
@@ -135,7 +130,7 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>6.5.3</version>
+                <version>8.2.1</version>
                 <executions>
                     <execution>
                         <goals>
