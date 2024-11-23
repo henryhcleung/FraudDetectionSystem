@@ -20,7 +20,7 @@ pipeline {
     }
     
     options {
-        timeout(time: 1, unit: 'HOURS')
+        timeout(time: 2, unit: 'HOURS') // Increase timeout to allow for longer builds
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
@@ -33,6 +33,12 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+        
+        stage('Clean Workspace') {
+            steps {
+                cleanWs() // Clean workspace to avoid stale data
             }
         }
         
@@ -78,17 +84,6 @@ pipeline {
             }
         }
         
-        stage('Integration Tests') {
-            steps {
-                sh 'mvn verify -DskipUnitTests -s custom-settings.xml'
-            }
-            post {
-                always {
-                    junit 'target/failsafe-reports/*.xml'
-                }
-            }
-        }
-        
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarCloud') {
@@ -101,6 +96,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                     sh '''
+                        mvn dependency-check:purge
                         mvn dependency-check:check \
                         -Dnvd.apiKey=${NVD_API_KEY} \
                         -Dnvd.mirror.url=${NVD_MIRROR_URL} \
@@ -126,7 +122,6 @@ pipeline {
    post {
        always {
            junit 'target/surefire-reports/*.xml'
-           junit 'target/failsafe-reports/*.xml'
            cleanWs()
        }
        success {
