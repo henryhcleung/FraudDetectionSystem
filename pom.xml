@@ -1,143 +1,146 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.binance</groupId>
-    <artifactId>FraudDetectionSystem</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+<groupId>com.binance</groupId>
+<artifactId>FraudDetectionSystem</artifactId>
+<version>1.0-SNAPSHOT</version>
+<packaging>jar</packaging>
 
-    <name>FraudDetectionSystem</name>
-    <description>Fraud Detection System</description>
+<name>FraudDetectionSystem</name>
+<description>Fraud Detection System</description>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
-        <relativePath/>
-    </parent>
+<parent>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-parent</artifactId>
+<version>3.1.5</version>
+<relativePath/>
+</parent>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>17</java.version>
-        <sonar.projectKey>henryhcleung_FraudDetectionSystem</sonar.projectKey>
-        <sonar.organization>henryhcleung</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    </properties>
+<properties>
+<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+<java.version>17</java.version>
+<sonar.projectKey>henryhcleung_FraudDetectionSystem</sonar.projectKey>
+<sonar.organization>henryhcleung</sonar.organization>
+<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+</properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.29.2-GA</version>
-        </dependency>
-    </dependencies>
+<dependencies>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-test</artifactId>
+   <scope>test</scope>
+</dependency>
+<dependency>
+   <groupId>org.springframework.security</groupId>
+   <artifactId>spring-security-test</artifactId>
+   <scope>test</scope>
+</dependency>
+<dependency>
+   <groupId>com.h2database</groupId>
+   <artifactId>h2</artifactId>
+   <scope>runtime</scope>
+</dependency>
+<dependency>
+   <groupId>org.javassist</groupId>
+   <artifactId>javassist</artifactId>
+   <version>3.29.2-GA</version>
+</dependency>
+</dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.9.1.2184</version>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.8</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>7.4.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>enforce-java</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>${java.version}</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+<build>
+<plugins>
+   <plugin>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-maven-plugin</artifactId>
+   </plugin>
+   <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-compiler-plugin</artifactId>
+       <configuration>
+           <source>${java.version}</source>
+           <target>${java.version}</target>
+       </configuration>
+   </plugin>
+   <plugin>
+       <groupId>org.sonarsource.scanner.maven</groupId>
+       <artifactId>sonar-maven-plugin</artifactId>
+       <version>3.9.1.2184</version>
+   </plugin>
+   <plugin>
+       <groupId>org.jacoco</groupId>
+       <artifactId>jacoco-maven-plugin</artifactId>
+       <version>0.8.8</version>
+       <executions>
+           <execution>
+               <goals>
+                   <goal>prepare-agent</goal>
+               </goals>
+           </execution>
+           <execution>
+               <id>report</id>
+               <phase>prepare-package</phase>
+               <goals>
+                   <goal>report</goal>
+               </goals>
+           </execution>
+       </executions>
+   </plugin>
+   <plugin>
+       <groupId>org.owasp</groupId>
+       <artifactId>dependency-check-maven</artifactId>
+       <version>11.1.0</version>
+       <executions>
+           <execution>
+               <goals>
+                   <goal>check</goal>
+               </goals>
+           </execution>
+       </executions>
+       <configuration>
+           <cveValidForHours>48</cveValidForHours>
+       </configuration>
+   </plugin>
+   <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-enforcer-plugin</artifactId>
+       <executions>
+           <execution>
+               <id>enforce-java</id>
+               <goals>
+                   <goal>enforce</goal>
+               </goals>
+               <configuration>
+                   <rules>
+                       <requireJavaVersion>
+                           <version>${java.version}</version>
+                       </requireJavaVersion>
+                   </rules>
+               </configuration>
+           </execution>
+       </executions>
+   </plugin>
+</plugins>
+</build>
 </project>
