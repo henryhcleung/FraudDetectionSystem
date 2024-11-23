@@ -121,7 +121,7 @@
                 <configuration>
                     <cveValidForHours>48</cveValidForHours>
                     <nvd>
-                        <apiKey>${env.NVD_API_KEY}</apiKey>
+                        <apiKey>${nvd.apiKey}</apiKey>
                     </nvd>
                 </configuration>
             </plugin>

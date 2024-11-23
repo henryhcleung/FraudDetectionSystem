@@ -46,9 +46,8 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Debug Environment
-        run: |
-          echo "NVD_API_KEY: ${{ secrets.NVD_API_KEY }}"
+      - name: Debug NVD API Key
+        run: echo "NVD API Key is set: ${{ secrets.NVD_API_KEY != '' }}"
 
       - name: Build and analyze
         env:
@@ -69,6 +68,8 @@ jobs:
   security-scan:
     needs: build-and-test
     runs-on: ubuntu-latest
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Run OWASP Dependency-Check
@@ -77,7 +78,7 @@ jobs:
           project: 'FraudDetectionSystem'
           path: '.'
           format: 'HTML'
-          args: '--nvd.apiKey ${{ secrets.NVD_API_KEY }}'
+          args: '--nvd.apiKey ${{ env.NVD_API_KEY }}'
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v4
         with:

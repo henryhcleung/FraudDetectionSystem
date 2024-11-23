@@ -60,9 +60,11 @@ pipeline {
             }
         }
         
-        stage('Debug Environment') {
+        stage('Debug NVD API Key') {
             steps {
-                sh 'echo "NVD_API_KEY: $NVD_API_KEY"'
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+            sh 'echo "NVD API Key is set: ${NVD_API_KEY != \'\'}"'
+        }
             }
         }
         
@@ -104,8 +106,10 @@ pipeline {
         
         stage('Dependency Check') {
             steps {
-                sh 'mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml'
-            }
+        withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+            sh 'mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml'
+        }
+    }
         }
         
         stage('Docker Build and Push') {
