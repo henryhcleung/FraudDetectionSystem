@@ -16,7 +16,6 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
         NVD_API_KEY = credentials('nvd-api-key')
-        NVD_MIRROR_URL = 'http://local-nvd-mirror/nvd' // Example URL for local NVD mirror
     }
     
     options {
@@ -99,7 +98,6 @@ pipeline {
                         mvn dependency-check:purge
                         mvn dependency-check:check \
                         -Dnvd.apiKey=${NVD_API_KEY} \
-                        -Dnvd.mirror.url=${NVD_MIRROR_URL} \
                         -s custom-settings.xml
                     '''
                 }

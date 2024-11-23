@@ -11,7 +11,6 @@ on:
 env:
   JAVA_VERSION: '17'
   MAVEN_VERSION: '3.8.4'
-  NVD_MIRROR_URL: 'http://local-nvd-mirror/nvd' # Example URL for local NVD mirror
 
 permissions:
   contents: read
@@ -63,13 +62,15 @@ jobs:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - name: Purge Dependency-Check Database
+        run: mvn dependency-check:purge -s custom-settings.xml
+
       - name: Run OWASP Dependency-Check
         run: |
-          mvn dependency-check:purge
           mvn dependency-check:check \
           -Dnvd.apiKey=${{ env.NVD_API_KEY }} \
-          -Dnvd.mirror.url=${{ env.NVD_MIRROR_URL }} \
           -s custom-settings.xml
+
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v4
         with:
