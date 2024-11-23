@@ -63,17 +63,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'FraudDetectionSystem'
-          path: '.'
-          format: 'HTML'
-          args: '--nvd.apiKey ${{ env.NVD_API_KEY }}'
+        run: mvn dependency-check:check -Dnvd.apiKey=${{ env.NVD_API_KEY }} -s custom-settings.xml
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: ${{ github.workspace }}/reports
+          path: target/dependency-check-report.html
           retention-days: 1
 
   trigger-cd:
