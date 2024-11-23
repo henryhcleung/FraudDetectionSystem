@@ -73,6 +73,7 @@ jobs:
           project: 'FraudDetectionSystem'
           path: '.'
           format: 'HTML'
+          args: '--nvd.apiKey ${{ secrets.NVD_API_KEY }}'
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v4
         with:
