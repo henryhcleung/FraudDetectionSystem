@@ -26,7 +26,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'KUBE_CONFIG_DATA', usernameVariable: 'KUBE_USER', passwordVariable: 'KUBECONFIG_CONTENT')]) {
                         sh """
                             echo \$KUBECONFIG_CONTENT | base64 --decode > kubeconfig
-                            export KUBECONFIG=kubeconfig
+                            export KUBECONFIG=\$(pwd)/kubeconfig
                             kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                             kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
                             kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
