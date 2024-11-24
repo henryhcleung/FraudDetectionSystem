@@ -86,7 +86,9 @@ pipeline {
     
     post {
         always {
-            cleanWs()
+            node {
+                cleanWs()
+            }
         }
         success {
             echo 'CI pipeline completed successfully!'
