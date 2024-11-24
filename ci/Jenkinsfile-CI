@@ -47,6 +47,7 @@ pipeline {
         stage('Environment Setup') {
             steps {
                 sh '''
+                    set -xe
                     source "${SDKMAN_DIR}/bin/sdkman-init.sh"
                     sdk use java 17.0.12-jbr
                     echo "JAVA_HOME: $JAVA_HOME"
@@ -61,8 +62,14 @@ pipeline {
             steps {
                 script {
                     def mvnCmd = "mvn -B -T 1C"
-                    sh "${mvnCmd} clean install -DskipTests -s custom-settings.xml"
-                    sh "${mvnCmd} test -s custom-settings.xml"
+                    sh '''
+                        set -xe
+                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                        sdk use java 17.0.12-jbr
+                        java -version
+                        ${mvnCmd} clean install -DskipTests -s custom-settings.xml
+                        ${mvnCmd} test -s custom-settings.xml
+                    '''
                 }
             }
             post {
