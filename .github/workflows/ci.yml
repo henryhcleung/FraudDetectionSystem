@@ -61,6 +61,9 @@ jobs:
         run: |
           mvn dependency-check:purge dependency-check:check \
           -Dnvd.apiKey=${{ env.NVD_API_KEY }} \
+          -DdataDirectory=${{ github.workspace }}/dependency-check-data \
+          -DfailBuildOnCVSS=7 \
+          -Dformat=ALL \
           -s custom-settings.xml
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v4
