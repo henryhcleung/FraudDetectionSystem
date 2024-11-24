@@ -22,15 +22,18 @@ pipeline {
         
         stage('Deploy to Kubernetes') {
             steps {
-                withKubeConfig([credentialsId: 'kube-config']) {
-                    sh """
-                        kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
-                        kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
-                        kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
-                        kubectl apply -f k8s/service.yaml -n ${KUBERNETES_NAMESPACE}
-                        kubectl set image deployment/fraud-detection-system fraud-detection-system=${DOCKER_IMAGE}:${params.DOCKER_TAG} -n ${KUBERNETES_NAMESPACE}
-                        kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=300s
-                    """
+                script {
+                    // Ensure the Kubernetes plugin is installed and configured
+                    withKubeConfig([credentialsId: 'kube-config']) {
+                        sh """
+                            kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                            kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl apply -f k8s/service.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl set image deployment/fraud-detection-system fraud-detection-system=${DOCKER_IMAGE}:${params.DOCKER_TAG} -n ${KUBERNETES_NAMESPACE}
+                            kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=300s
+                        """
+                    }
                 }
             }
         }
