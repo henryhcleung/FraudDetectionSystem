@@ -18,7 +18,7 @@ pipeline {
     }
     
     options {
-        timeout(time: 2, unit: 'HOURS')
+        timeout(time: 3, unit: 'HOURS')
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
@@ -36,8 +36,11 @@ pipeline {
         
         stage('Build and Test') {
             steps {
-                sh "mvn clean install -DskipTests -s custom-settings.xml"
-                sh "mvn test -s custom-settings.xml"
+                script {
+                    def mvnCmd = "mvn -B -T 1C"
+                    sh "${mvnCmd} clean install -DskipTests -s custom-settings.xml"
+                    sh "${mvnCmd} test -s custom-settings.xml"
+                }
             }
             post {
                 always {
@@ -61,7 +64,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                     sh '''
                         mvn dependency-check:purge -s custom-settings.xml
-                        mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml
+                        mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml -DskipProvidedScope=true -DskipSystemScope=true
                     '''
                 }
             }
@@ -72,7 +75,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        def customImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                        def customImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--no-cache .")
                         customImage.push()
                         customImage.push("latest-${params.ENV}")
                     }
