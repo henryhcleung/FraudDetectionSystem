@@ -16,13 +16,13 @@ pipeline {
     }
     
     options {
-        timeout(time: 30, unit: 'HOURS')
+        timeout(time: 6, unit: 'HOURS')
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
     
     triggers {
-        cron('0 0 * * *')
+        cron('H 0 * * 0') // Run weekly
     }
     
     stages {
