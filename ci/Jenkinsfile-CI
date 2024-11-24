@@ -52,9 +52,9 @@ pipeline {
         
         stage('Build and Test') {
             steps {
-                withMaven(maven: 'maven-3.8.4') {
-                    sh "mvn clean package"
-                    sh "mvn test"
+                withMaven(maven: 'maven-3.8.4', mavenSettingsConfig: 'custom-maven-settings') {
+                    sh "mvn clean package -s custom-settings.xml"
+                    sh "mvn test -s custom-settings.xml"
                 }
             }
             post {
@@ -66,12 +66,8 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    """
+                 withSonarQubeEnv('SonarQubeServerName') {
+                 sh 'mvn sonar:sonar -s custom-settings.xml'
                 }
             }
         }
