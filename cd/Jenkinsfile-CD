@@ -32,7 +32,7 @@ pipeline {
                             kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
                             kubectl apply -f k8s/service.yaml -n ${KUBERNETES_NAMESPACE}
                             kubectl set image deployment/fraud-detection-system fraud-detection-system=${DOCKER_IMAGE}:${params.DOCKER_TAG} -n ${KUBERNETES_NAMESPACE}
-                            kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=300s
+                            kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=600s
                         """
                     }
                 }
