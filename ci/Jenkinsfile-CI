@@ -1,4 +1,4 @@
-     pipeline {
+    pipeline {
          agent { label 'microservice-build-agent-1' }
          
          parameters {
@@ -76,13 +76,27 @@
              
              stage('Build') {
                  steps {
-                     sh 'mvn clean package -DskipTests -s custom-settings.xml'
+                     script {
+                         def settingsFile = 'custom-settings.xml'
+                         if (fileExists(settingsFile)) {
+                             sh "mvn clean package -DskipTests -s ${settingsFile}"
+                         } else {
+                             error "Settings file ${settingsFile} not found!"
+                         }
+                     }
                  }
              }
              
              stage('Unit Tests') {
                  steps {
-                     sh 'mvn test -s custom-settings.xml'
+                     script {
+                         def settingsFile = 'custom-settings.xml'
+                         if (fileExists(settingsFile)) {
+                             sh "mvn test -s ${settingsFile}"
+                         } else {
+                             error "Settings file ${settingsFile} not found!"
+                         }
+                     }
                  }
                  post {
                      always {
