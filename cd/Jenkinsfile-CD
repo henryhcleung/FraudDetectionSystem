@@ -23,8 +23,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'KUBE_CONFIG_DATA']) { // Updated credentialsId
+                    withCredentials([string(credentialsId: 'KUBE_CONFIG_DATA', variable: 'KUBECONFIG_CONTENT')]) {
                         sh """
+                            echo \$KUBECONFIG_CONTENT | base64 --decode > kubeconfig
+                            export KUBECONFIG=kubeconfig
                             kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                             kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
                             kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
