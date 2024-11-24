@@ -1,131 +1,70 @@
 pipeline {
-    agent { label 'microservice-build-agent-1' }
+    agent { label 'microservice-deploy-agent-1' }
     
     parameters {
-        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
-        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Environment to build for')
+        string(name: 'DOCKER_TAG', defaultValue: 'latest-dev', description: 'Docker tag to deploy')
+        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Environment to deploy to')
     }
     
     environment {
-        SDKMAN_DIR = "${HOME}/.sdkman"
-        ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
-        DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
-        SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
-        NVD_API_KEY = credentials('nvd-api-key')
-    }
-    
-    options {
-        timeout(time: 6, unit: 'HOURS')
-        disableConcurrentBuilds()
-        ansiColor('xterm')
-    }
-    
-    triggers {
-        cron('H 0 * * 0') // Run weekly
+        KUBERNETES_NAMESPACE = "fraud-detection-${params.ENV}"
     }
     
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install SDKMAN') {
-            steps {
-                sh '''
-                    if [ ! -d "${SDKMAN_DIR}" ]; then
-                        curl -s "https://get.sdkman.io" | bash
-                    fi
-                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                    sdk install java 17.0.12-jbr || true
-                '''
-            }
-        }
-        
-        stage('Environment Setup') {
-            steps {
-                sh '''
-                    set -xe
-                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                    sdk use java 17.0.12-jbr
-                    echo "JAVA_HOME: $JAVA_HOME"
-                    echo "PATH: $PATH"
-                    java -version
-                    mvn -version
-                '''
-            }
-        }
-        
-        stage('Build and Test') {
+        stage('Prepare Deployment') {
             steps {
                 script {
-                    def mvnCmd = "mvn -B -T 1C"
-                    sh '''
-                        set -xe
-                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                        sdk use java 17.0.12-jbr
-                        java -version
-                        ''' + mvnCmd + ''' clean install -DskipTests -s custom-settings.xml
-                        ''' + mvnCmd + ''' test -s custom-settings.xml
-                    '''
-                }
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
+                    echo "Preparing to deploy Docker image: ${DOCKER_IMAGE}:${params.DOCKER_TAG} to environment: ${params.ENV}"
                 }
             }
         }
         
-        stage('SonarQube Analysis') {
-            when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
-            steps {
-                withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar -s custom-settings.xml'
-                }
-            }
-        }
-        
-        stage('Dependency Check') {
-            when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
-            steps {
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    sh '''
-                        mvn dependency-check:purge -s custom-settings.xml
-                        mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml -DdataDirectory=${WORKSPACE}/dependency-check-data -DfailBuildOnCVSS=7 -Dformat=ALL
-                    '''
-                }
-            }
-        }
-        
-        stage('Docker Build and Push') {
-            when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        def customImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--no-cache .")
-                        customImage.push()
-                        customImage.push("latest-${params.ENV}")
+                    // Ensure the Kubernetes plugin is installed and configured
+                    withKubeConfig([credentialsId: 'kube-config']) {
+                        sh """
+                            kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                            kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl apply -f k8s/service.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl set image deployment/fraud-detection-system fraud-detection-system=${DOCKER_IMAGE}:${params.DOCKER_TAG} -n ${KUBERNETES_NAMESPACE}
+                            kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=300s
+                        """
                     }
+                }
+            }
+        }
+        
+        stage('Post-Deployment Verification') {
+            steps {
+                script {
+                    echo "Verifying deployment in namespace: ${KUBERNETES_NAMESPACE}"
+                    def healthCheckUrl = "http://${DOCKER_IMAGE}.${KUBERNETES_NAMESPACE}.svc.cluster.local/actuator/health"
+                    def healthStatus = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}", returnStdout: true).trim()
+                    if (healthStatus != '200') {
+                        error "Health check failed with status code: ${healthStatus}"
+                    }
+                    echo "Health check passed"
                 }
             }
         }
     }
     
     post {
-        always {
-            cleanWs()
-        }
         success {
-            echo 'CI pipeline completed successfully!'
+            echo 'CD pipeline completed successfully!'
+            mail to: 'henryleunghc@gmail.com',
+                 subject: "Successful Deployment: ${currentBuild.fullDisplayName}",
+                 body: "Deployment succeeded for ${env.BUILD_URL}"
         }
         failure {
-            echo 'CI pipeline failed!'
+            echo 'CD pipeline failed!'
             mail to: 'henryleunghc@gmail.com',
-                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                 body: "Something is wrong with ${env.BUILD_URL}"
+                 subject: "Failed Deployment: ${currentBuild.fullDisplayName}",
+                 body: "Deployment failed for ${env.BUILD_URL}"
         }
     }
 }
