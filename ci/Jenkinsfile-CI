@@ -1,4 +1,4 @@
-    pipeline {
+     pipeline {
          agent { label 'microservice-build-agent-1' }
          
          parameters {
