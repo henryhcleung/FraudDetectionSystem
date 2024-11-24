@@ -7,17 +7,19 @@ pipeline {
     }
     
     environment {
-        JAVA_HOME = tool 'JDK17'
-        MAVEN_HOME = tool 'maven-3.8.4'
+        SDKMAN_DIR = "${env.WORKSPACE}/.sdkman"
+        JAVA_HOME = "${SDKMAN_DIR}/candidates/java/current"
+        MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
         PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
+        NVD_API_KEY = credentials('nvd-api-key')
     }
     
     options {
-        timeout(time: 2, unit: 'HOURS')
+        timeout(time: 1, unit: 'HOURS')
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
@@ -33,12 +35,36 @@ pipeline {
             }
         }
         
+        stage('Setup Environment') {
+            steps {
+                script {
+                    if (!fileExists("${SDKMAN_DIR}/candidates/java/current")) {
+                        sh '''
+                            curl -s "https://get.sdkman.io" | bash
+                            source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                            sdk install java 17.0.12-jbr
+                        '''
+                    }
+                    sh '''
+                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                        sdk use java 17.0.12-jbr
+                        java -version
+                        mvn -version
+                    '''
+                }
+            }
+        }
+        
         stage('Build and Test') {
             steps {
-                sh """
-                    mvn clean install -DskipTests
-                    mvn test
-                """
+                script {
+                    def settingsFile = 'custom-settings.xml'
+                    if (fileExists(settingsFile)) {
+                        sh "mvn clean install -s ${settingsFile}"
+                    } else {
+                        error "Settings file ${settingsFile} not found!"
+                    }
+                }
             }
             post {
                 always {
@@ -48,25 +74,28 @@ pipeline {
         }
         
         stage('SonarQube Analysis') {
+            when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
             steps {
                 withSonarQubeEnv('SonarCloud') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+                    sh 'mvn sonar:sonar -s custom-settings.xml'
                 }
             }
         }
         
         stage('Dependency Check') {
+            when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
             steps {
-                sh "mvn org.owasp:dependency-check-maven:check"
-            }
-            post {
-                always {
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    sh '''
+                        mvn dependency-check:purge -s custom-settings.xml
+                        mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml
+                    '''
                 }
             }
         }
         
         stage('Docker Build and Push') {
+            when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
