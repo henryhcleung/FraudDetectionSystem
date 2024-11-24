@@ -23,8 +23,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Ensure the Kubernetes plugin is installed and configured
-                    withKubeConfig([credentialsId: 'kube-config']) {
+                    withKubeConfig([credentialsId: 'KUBE_CONFIG_DATA']) { // Updated credentialsId
                         sh """
                             kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                             kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
