@@ -94,7 +94,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                     sh '''
                         mvn dependency-check:purge -s custom-settings.xml
-                        mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml -DskipProvidedScope=true -DskipSystemScope=true
+                        mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml -DdataDirectory=${WORKSPACE}/dependency-check-data -DfailBuildOnCVSS=7 -Dformat=ALL
                     '''
                 }
             }

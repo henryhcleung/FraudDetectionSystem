@@ -137,11 +137,13 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <cveValidForHours>24</cveValidForHours>
                     <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
+                    <cveValidForHours>24</cveValidForHours>
                     <nvd>
                         <apiKey>${env.NVD_API_KEY}</apiKey>
                     </nvd>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <format>ALL</format>
                 </configuration>
             </plugin>
             <!-- Maven Enforcer Plugin -->
