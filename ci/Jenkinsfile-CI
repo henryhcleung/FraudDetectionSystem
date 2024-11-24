@@ -18,7 +18,7 @@ pipeline {
     }
     
     options {
-        timeout(time: 2, unit: 'HOURS')
+        timeout(time: 1, unit: 'HOURS')
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
@@ -28,16 +28,9 @@ pipeline {
     }
     
     stages {
-        stage('Checkout') {
+        stage('Checkout & Setup') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: "*/${params.BRANCH}"]],
-                          userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git',
-                                              credentialsId: 'github-credentials']]])
-            }
-        }
-        
-        stage('Install SDKMAN and Java') {
-            steps {
+                checkout scm
                 sh '''
                     if [ ! -d "${SDKMAN_DIR}" ]; then
                         curl -s "https://get.sdkman.io" | bash
@@ -46,15 +39,16 @@ pipeline {
                     fi
                     source "${SDKMAN_DIR}/bin/sdkman-init.sh"
                     sdk use java 17.0.12-jbr
+                    java -version
+                    mvn -version
                 '''
             }
         }
         
-        stage('Build and Test') {
+        stage('Build & Test') {
             steps {
                 withMaven(maven: 'maven-3.8.4', mavenSettingsConfig: 'custom-maven-settings') {
-                    sh "mvn clean package -s custom-settings.xml"
-                    sh "mvn test -s custom-settings.xml"
+                    sh "mvn clean verify -s custom-settings.xml"
                 }
             }
             post {
@@ -66,8 +60,10 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                 withSonarQubeEnv('SonarQubeServerName') {
-                 sh 'mvn sonar:sonar -s custom-settings.xml'
+                withSonarQubeEnv('SonarCloud') {
+                    withMaven(maven: 'maven-3.8.4', mavenSettingsConfig: 'custom-maven-settings') {
+                        sh "mvn sonar:sonar -s custom-settings.xml"
+                    }
                 }
             }
         }
@@ -75,11 +71,12 @@ pipeline {
         stage('Dependency Check') {
             steps {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    sh '''
-                        mvn dependency-check:purge
-                        mvn dependency-check:check \
-                        -Dnvd.apiKey=${NVD_API_KEY}
-                    '''
+                    withMaven(maven: 'maven-3.8.4', mavenSettingsConfig: 'custom-maven-settings') {
+                        sh '''
+                            mvn dependency-check:purge -s custom-settings.xml
+                            mvn dependency-check:check -Dnvd.apiKey=${NVD_API_KEY} -s custom-settings.xml
+                        '''
+                    }
                 }
             }
         }
@@ -105,7 +102,6 @@ pipeline {
             echo 'CI pipeline completed successfully!'
         }
         failure {
-            echo 'CI pipeline failed!'
             mail to: 'henryleunghc@gmail.com',
                  subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
                  body: "Something is wrong with ${env.BUILD_URL}"
