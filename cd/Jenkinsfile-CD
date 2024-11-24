@@ -7,7 +7,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = 'fraud-detection-system'
+        DOCKER_IMAGE = 'henryleungdemotest/fraud-detection-system'
         KUBERNETES_NAMESPACE = "fraud-detection-${params.ENV}"
     }
     
