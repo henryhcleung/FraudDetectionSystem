@@ -37,9 +37,9 @@ pipeline {
                 sh '''
                     if [ ! -d "${SDKMAN_DIR}" ]; then
                         curl -s "https://get.sdkman.io" | bash
-                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                        sdk install java 17.0.12-jbr
                     fi
+                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                    sdk install java 17.0.12-jbr || true
                 '''
             }
         }

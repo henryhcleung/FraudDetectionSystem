@@ -138,6 +138,7 @@
                 </executions>
                 <configuration>
                     <cveValidForHours>24</cveValidForHours>
+                    <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
                     <nvd>
                         <apiKey>${env.NVD_API_KEY}</apiKey>
                     </nvd>
@@ -175,7 +176,7 @@
                     <forkCount>2C</forkCount>
                     <reuseForks>true</reuseForks>
                 </configuration>
-            </plugin>         
+            </plugin>        
         </plugins>
     </build>
 </project>
