@@ -7,8 +7,8 @@ pipeline {
     }
     
     environment {
-        JAVA_HOME = tool 'jdk-17'
-        MAVEN_HOME = tool 'maven-3.8.4'
+        JAVA_HOME = tool name: 'jdk-17', type: 'jdk'
+        MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
         PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
         DOCKER_IMAGE = 'fraud-detection-system'
@@ -18,7 +18,7 @@ pipeline {
     }
     
     options {
-        timeout(time: 3, unit: 'HOURS')
+        timeout(time: 2, unit: 'HOURS')
         disableConcurrentBuilds()
         ansiColor('xterm')
     }

@@ -35,7 +35,8 @@ jobs:
         run: |
           mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.projectKey=henryhcleung_FraudDetectionSystem \
-          -Dmaven.test.failure.ignore=true
+          -Dmaven.test.failure.ignore=true \
+          -s custom-settings.xml
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
