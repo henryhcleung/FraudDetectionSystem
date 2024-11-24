@@ -1,145 +1,143 @@
-pipeline {
-    agent { label 'microservice-build-agent-1' }
-    
-    parameters {
-        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
-        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Environment to build for')
-    }
-    
-    environment {
-        SDKMAN_DIR = "${env.WORKSPACE}/.sdkman"
-        JAVA_HOME = "${SDKMAN_DIR}/candidates/java/current"
-        MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
-        PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
-        ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
-        DOCKER_IMAGE = 'fraud-detection-system'
-        DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
-        SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
-        NVD_API_KEY = credentials('nvd-api-key')
-    }
-    
-    options {
-        timeout(time: 2, unit: 'HOURS')
-        disableConcurrentBuilds()
-        ansiColor('xterm')
-    }
-    
-    triggers {
-        cron('0 0 * * *')
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                script {
-                    checkout([$class: 'GitSCM', branches: [[name: "*/${params.BRANCH}"]],
-                              userRemoteConfigs: [[url: 'https://your-repo-url.git']]])
-                }
-            }
-        }
-        
-        stage('Verify All Files') {
-            steps {
-                sh 'ls -la'
-            }
-        }
-        
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-        
-        stage('Install SDKMAN') {
-            steps {
-                sh '''
-                    if [ ! -d "${SDKMAN_DIR}" ]; then
-                        curl -s "https://get.sdkman.io" | bash
-                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                        sdk install java 17.0.12-jbr
-                    fi
-                '''
-            }
-        }
-        
-        stage('Environment Setup') {
-            steps {
-                sh '''
-                    source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                    sdk use java 17.0.12-jbr
-                    echo "JAVA_HOME: $JAVA_HOME"
-                    echo "PATH: $PATH"
-                    java -version
-                    mvn -version
-                '''
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                // Use absolute path if necessary
-                sh 'mvn clean package -DskipTests -s custom-settings.xml'
-            }
-        }
-        
-        stage('Unit Tests') {
-            steps {
-                sh 'mvn test -s custom-settings.xml'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-        
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar -s custom-settings.xml'
-                }
-            }
-        }
-        
-        stage('Dependency Check') {
-            steps {
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    sh '''
-                        mvn dependency-check:purge -s custom-settings.xml
-                        mvn dependency-check:check \
-                        -Dnvd.apiKey=${NVD_API_KEY} \
-                        -s custom-settings.xml
-                    '''
-                }
-            }
-        }
-        
-        stage('Docker Build and Push') {
-            steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        def customImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                        customImage.push()
-                        customImage.push("latest-${params.ENV}")
-                    }
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            junit 'target/surefire-reports/*.xml'
-            cleanWs()
-        }
-        success {
-            echo 'CI pipeline completed successfully!'
-        }
-        failure {
-            echo 'CI pipeline failed!'
-            mail to: 'henryleunghc@gmail.com',
-                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                 body: "Something is wrong with ${env.BUILD_URL}"
-        }
-    }
-}
+     pipeline {
+         agent { label 'microservice-build-agent-1' }
+         
+         parameters {
+             string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
+             choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Environment to build for')
+         }
+         
+         environment {
+             SDKMAN_DIR = "${env.WORKSPACE}/.sdkman"
+             JAVA_HOME = "${SDKMAN_DIR}/candidates/java/current"
+             MAVEN_HOME = tool name: 'maven-3.8.4', type: 'maven'
+             PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
+             ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
+             DOCKER_IMAGE = 'fraud-detection-system'
+             DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
+             SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
+             NVD_API_KEY = credentials('nvd-api-key')
+         }
+         
+         options {
+             timeout(time: 2, unit: 'HOURS')
+             disableConcurrentBuilds()
+             ansiColor('xterm')
+         }
+         
+         triggers {
+             cron('0 0 * * *')
+         }
+         
+         stages {
+             stage('Checkout') {
+                 steps {
+                     checkout([$class: 'GitSCM', branches: [[name: "*/${params.BRANCH}"]],
+                               userRemoteConfigs: [[url: 'https://github.com/henryhcleung/FraudDetectionSystem.git',
+                                                   credentialsId: 'github-credentials']]])
+                 }
+             }
+             
+             stage('Verify All Files') {
+                 steps {
+                     sh 'ls -la'
+                 }
+             }
+             
+             stage('Clean Workspace') {
+                 steps {
+                     cleanWs()
+                 }
+             }
+             
+             stage('Install SDKMAN') {
+                 steps {
+                     sh '''
+                         if [ ! -d "${SDKMAN_DIR}" ]; then
+                             curl -s "https://get.sdkman.io" | bash
+                             source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                             sdk install java 17.0.12-jbr
+                         fi
+                     '''
+                 }
+             }
+             
+             stage('Environment Setup') {
+                 steps {
+                     sh '''
+                         source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                         sdk use java 17.0.12-jbr
+                         echo "JAVA_HOME: $JAVA_HOME"
+                         echo "PATH: $PATH"
+                         java -version
+                         mvn -version
+                     '''
+                 }
+             }
+             
+             stage('Build') {
+                 steps {
+                     sh 'mvn clean package -DskipTests -s custom-settings.xml'
+                 }
+             }
+             
+             stage('Unit Tests') {
+                 steps {
+                     sh 'mvn test -s custom-settings.xml'
+                 }
+                 post {
+                     always {
+                         junit 'target/surefire-reports/*.xml'
+                     }
+                 }
+             }
+             
+             stage('SonarQube Analysis') {
+                 steps {
+                     withSonarQubeEnv('SonarCloud') {
+                         sh 'mvn sonar:sonar -s custom-settings.xml'
+                     }
+                 }
+             }
+             
+             stage('Dependency Check') {
+                 steps {
+                     withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                         sh '''
+                             mvn dependency-check:purge -s custom-settings.xml
+                             mvn dependency-check:check \
+                             -Dnvd.apiKey=${NVD_API_KEY} \
+                             -s custom-settings.xml
+                         '''
+                     }
+                 }
+             }
+             
+             stage('Docker Build and Push') {
+                 steps {
+                     script {
+                         docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                             def customImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                             customImage.push()
+                             customImage.push("latest-${params.ENV}")
+                         }
+                     }
+                 }
+             }
+         }
+         
+         post {
+             always {
+                 junit 'target/surefire-reports/*.xml'
+                 cleanWs()
+             }
+             success {
+                 echo 'CI pipeline completed successfully!'
+             }
+             failure {
+                 echo 'CI pipeline failed!'
+                 mail to: 'henryleunghc@gmail.com',
+                      subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                      body: "Something is wrong with ${env.BUILD_URL}"
+             }
+         }
+     }
