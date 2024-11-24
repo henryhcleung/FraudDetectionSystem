@@ -15,7 +15,6 @@ pipeline {
         DOCKER_IMAGE = 'fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
-        NVD_API_KEY = credentials('nvd-api-key')
     }
     
     options {
@@ -37,18 +36,6 @@ pipeline {
             }
         }
         
-        stage('Prepare Environment') {
-            steps {
-                script {
-                    def settingsFile = 'custom-settings.xml'
-                    if (!fileExists(settingsFile)) {
-                        error "Settings file ${settingsFile} not found!"
-                    }
-                    sh "chmod 644 ${settingsFile}"
-                }
-            }
-        }
-        
         stage('Install SDKMAN and Java') {
             steps {
                 sh '''
@@ -65,24 +52,26 @@ pipeline {
         
         stage('Build and Test') {
             steps {
-                sh """
-                    mvn clean package -DskipTests -s custom-settings.xml
-                    mvn test -s custom-settings.xml
-                    echo "Listing target directory:"
-                    ls -R target
-                """
+                withMaven(maven: 'maven-3.8.4') {
+                    sh "mvn clean package"
+                    sh "mvn test"
+                }
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
         
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarCloud') {
-                    sh 'mvn sonar:sonar -s custom-settings.xml'
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
@@ -91,10 +80,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                     sh '''
-                        mvn dependency-check:purge -s custom-settings.xml
+                        mvn dependency-check:purge
                         mvn dependency-check:check \
-                        -Dnvd.apiKey=${NVD_API_KEY} \
-                        -s custom-settings.xml
+                        -Dnvd.apiKey=${NVD_API_KEY}
                     '''
                 }
             }
