@@ -23,7 +23,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'KUBE_CONFIG_DATA', usernameVariable: 'KUBE_USER', passwordVariable: 'KUBECONFIG_CONTENT')]) {
+                    withCredentials([string(credentialsId: 'KUBE_CONFIG_DATA', variable: 'KUBECONFIG_CONTENT')]) {
                         sh """
                             echo \$KUBECONFIG_CONTENT | base64 --decode > kubeconfig
                             export KUBECONFIG=\$(pwd)/kubeconfig
