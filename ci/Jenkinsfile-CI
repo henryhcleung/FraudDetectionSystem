@@ -67,8 +67,8 @@ pipeline {
                         source "${SDKMAN_DIR}/bin/sdkman-init.sh"
                         sdk use java 17.0.12-jbr
                         java -version
-                        ${mvnCmd} clean install -DskipTests -s custom-settings.xml
-                        ${mvnCmd} test -s custom-settings.xml
+                        ''' + mvnCmd + ''' clean install -DskipTests -s custom-settings.xml
+                        ''' + mvnCmd + ''' test -s custom-settings.xml
                     '''
                 }
             }
