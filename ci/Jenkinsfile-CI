@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent { label 'microservice-build-agent-1' }
     
@@ -9,7 +10,7 @@ pipeline {
     environment {
         SDKMAN_DIR = "${HOME}/.sdkman"
         ARTIFACT_NAME = 'FraudDetectionSystem-1.0-SNAPSHOT.jar'
-        DOCKER_IMAGE = 'fraud-detection-system'
+        DOCKER_IMAGE = 'henryleungdemotest/fraud-detection-system'
         DOCKER_TAG = "${env.BUILD_NUMBER}-${params.ENV}"
         SONAR_PROJECT_KEY = 'henryhcleung_FraudDetectionSystem'
         NVD_API_KEY = credentials('nvd-api-key')
@@ -66,7 +67,6 @@ pipeline {
                         set -xe
                         source "${SDKMAN_DIR}/bin/sdkman-init.sh"
                         sdk use java 17.0.12-jbr
-                        java -version
                         ''' + mvnCmd + ''' clean install -DskipTests -s custom-settings.xml
                         ''' + mvnCmd + ''' test -s custom-settings.xml
                     '''
@@ -104,7 +104,7 @@ pipeline {
             when { expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') } }
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                    docker.withRegistry('https://registry.hub.docker.com', 'DOCKER_CREDENTIALS') {
                         def customImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "--no-cache .")
                         customImage.push()
                         customImage.push("latest-${params.ENV}")

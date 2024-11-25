@@ -68,7 +68,7 @@ jobs:
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-check-report
+          name: Dependency-Check-Report
           path: target/dependency-check-report.html
           retention-days: 1
 
