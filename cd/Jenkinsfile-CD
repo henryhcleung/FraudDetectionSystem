@@ -52,6 +52,15 @@ pipeline {
                 }
             }
         }
+        
+        stage('Approval') {
+            when {
+                expression { params.ENV == 'prod' }
+            }
+            steps {
+                input message: 'Deploy to production?', ok: 'Deploy'
+            }
+        }
     }
     
     post {
@@ -68,3 +77,4 @@ pipeline {
                  body: "Deployment failed for ${env.BUILD_URL}"
         }
     }
+}

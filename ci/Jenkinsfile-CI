@@ -59,21 +59,37 @@ pipeline {
         }
         
         stage('Build and Test') {
-            steps {
-                script {
-                    def mvnCmd = "mvn -B -T 1C"
-                    sh '''
-                        set -xe
-                        source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-                        sdk use java 17.0.12-jbr
-                        ''' + mvnCmd + ''' clean install -DskipTests -s custom-settings.xml
-                        ''' + mvnCmd + ''' test -s custom-settings.xml
-                    '''
+            parallel {
+                stage('Build') {
+                    steps {
+                        script {
+                            def mvnCmd = "mvn -B -T 1C"
+                            sh '''
+                                set -xe
+                                source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                                sdk use java 17.0.12-jbr
+                                ''' + mvnCmd + ''' clean install -DskipTests -s custom-settings.xml
+                            '''
+                        }
+                    }
                 }
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
+                stage('Test') {
+                    steps {
+                        script {
+                            def mvnCmd = "mvn -B -T 1C"
+                            sh '''
+                                set -xe
+                                source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+                                sdk use java 17.0.12-jbr
+                                ''' + mvnCmd + ''' test -s custom-settings.xml
+                            '''
+                        }
+                    }
+                    post {
+                        always {
+                            junit '**/target/surefire-reports/*.xml'
+                        }
+                    }
                 }
             }
         }
