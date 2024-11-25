@@ -105,6 +105,9 @@
                 <configuration>
                     <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
                     <cveValidForHours>24</cveValidForHours>
+                    <connectionTimeout>600000</connectionTimeout> <!-- 10 minutes -->
+                    <retryCount>5</retryCount>
+                    <retryWait>60000</retryWait> <!-- 1 minute -->
                     <nvd>
                         <apiKey>${env.NVD_API_KEY}</apiKey>
                     </nvd>
