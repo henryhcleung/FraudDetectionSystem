@@ -1,38 +1,31 @@
-# FraudDetectionSystem
-
-## Overview
-
-The FraudDetectionSystem is a Java-based application designed to detect cycles in linked lists and manage transactions. It uses Spring Boot for the backend and provides a web interface for user interaction.
-
-## Project Structure
-
 ```
 FRAUDDETECTIONSYSTEM
-├── src
-│   ├── main
-│   │   ├── java/com/binance
-│   │   │   ├── config
-│   │   │   │   └── SecurityConfig.java
-│   │   │   ├── controller
-│   │   │   │   ├── CycleDetectionController.java
-│   │   │   │   └── LoginController.java
-│   │   │   ├── model
-│   │   │   │   ├── ListNode.java
-│   │   │   │   └── Transaction.java
-│   │   │   ├── repository
-│   │   │   │   └── TransactionRepository.java
-│   │   │   └── service
-│   │   │       ├── CustomUserDetailsService.java
-│   │   │       └── CycleDetectionService.java
-│   │   ├── resources
-│   │   │   ├── templates
-│   │   │   │   ├── index.html
-│   │   │   │   └── login.html
-│   │   │   ├── application.properties
-│   │   │   ├── data.sql
-│   │   │   └── schema.sql
+├── fraud-detection-service
+│   ├── src
+│   │   ├── main
+│   │   │   ├── java/com/binance/frauddetection
+│   │   │   │   ├── config
+│   │   │   │   │   └── SecurityConfig.java
+│   │   │   │   ├── controller
+│   │   │   │   │   ├── CycleDetectionController.java
+│   │   │   │   │   └── LoginController.java
+│   │   │   │   ├── model
+│   │   │   │   │   ├── ListNode.java
+│   │   │   │   │   └── Transaction.java
+│   │   │   │   ├── repository
+│   │   │   │   │   └── TransactionRepository.java
+│   │   │   │   └── service
+│   │   │   │       ├── CustomUserDetailsService.java
+│   │   │   │       └── CycleDetectionService.java
+│   │   │   ├── resources
+│   │   │   │   ├── templates
+│   │   │   │   │   ├── index.html
+│   │   │   │   │   └── login.html
+│   │   │   │   ├── application.properties
+│   │   │   │   ├── data.sql
+│   │   │   │   └── schema.sql
 │   ├── test
-│   │   ├── java/com/binance
+│   │   ├── java/com/binance/frauddetection
 │   │   │   ├── controller
 │   │   │   │   └── CycleDetectionControllerTest.java
 │   │   │   ├── integration
@@ -42,7 +35,29 @@ FRAUDDETECTIONSYSTEM
 │   │   │   │   └── TransactionRepositoryTest.java
 │   │   │   └── service
 │   │   │       └── CycleDetectionServiceTest.java
-├── target
+├── config-service
+│   ├── src
+│   │   ├── main
+│   │   │   ├── java/com/binance/config
+│   │   │   │   └── ConfigServiceApplication.java
+│   │   ├── resources
+│   │   │   ├── application.yml
+│   │   │   └── bootstrap.yml
+├── eureka-server
+│   ├── src
+│   │   ├── main
+│   │   │   ├── java/com/binance/eureka
+│   │   │   │   └── EurekaServerApplication.java
+│   │   ├── resources
+│   │   │   ├── application.yml
+├── gateway-service
+│   ├── src
+│   │   ├── main
+│   │   │   ├── java/com/binance/gateway
+│   │   │   │   └── GatewayServiceApplication.java
+│   │   ├── resources
+│   │   │   ├── application.yml
+├── docker-compose.yml
 ├── .gitignore
 ├── custom-settings.xml
 ├── pom.xml
@@ -51,37 +66,45 @@ FRAUDDETECTIONSYSTEM
 
 ## Components
 
-### Config
-- **SecurityConfig.java**: Configuration for security settings.
+### Fraud Detection Service
+- **Config**
+  - **SecurityConfig.java**: Configuration for security settings.
+- **Controller**
+  - **CycleDetectionController.java**: Handles requests related to cycle detection and transaction management.
+  - **LoginController.java**: Manages user login and authentication.
+- **Model**
+  - **ListNode.java**: Represents a node in a linked list.
+  - **Transaction.java**: Represents a transaction entity.
+- **Repository**
+  - **TransactionRepository.java**: Interface for CRUD operations on transactions.
+- **Service**
+  - **CustomUserDetailsService.java**: Service for user details and authentication.
+  - **CycleDetectionService.java**: Contains business logic for cycle detection and transaction management.
+- **Resources**
+  - **templates/index.html**: Web interface for cycle detection and transaction management.
+  - **templates/login.html**: Web interface for user login.
+  - **application.properties**: Configuration properties for the application.
+  - **data.sql**: Initial data for the database.
+  - **schema.sql**: Database schema definition.
+- **Tests**
+  - **controller/CycleDetectionControllerTest.java**: Unit tests for `CycleDetectionController`.
+  - **integration/CycleDetectionIntegrationTest.java**: Integration tests for cycle detection functionality.
+  - **integration/LoginIntegrationTest.java**: Integration tests for login functionality.
+  - **repository/TransactionRepositoryTest.java**: Unit tests for `TransactionRepository`.
+  - **service/CycleDetectionServiceTest.java**: Unit tests for `CycleDetectionService`.
 
-### Controller
-- **CycleDetectionController.java**: Handles requests related to cycle detection and transaction management.
-- **LoginController.java**: Manages user login and authentication.
+### Config Service
+- **ConfigServiceApplication.java**: Main class for the configuration service.
+- **application.yml**: Configuration properties for the config service.
+- **bootstrap.yml**: Bootstrap configuration for the config service.
 
-### Model
-- **ListNode.java**: Represents a node in a linked list.
-- **Transaction.java**: Represents a transaction entity.
+### Eureka Server
+- **EurekaServerApplication.java**: Main class for the Eureka server.
+- **application.yml**: Configuration properties for the Eureka server.
 
-### Repository
-- **TransactionRepository.java**: Interface for CRUD operations on transactions.
-
-### Service
-- **CustomUserDetailsService.java**: Service for user details and authentication.
-- **CycleDetectionService.java**: Contains business logic for cycle detection and transaction management.
-
-### Resources
-- **templates/index.html**: Web interface for cycle detection and transaction management.
-- **templates/login.html**: Web interface for user login.
-- **application.properties**: Configuration properties for the application.
-- **data.sql**: Initial data for the database.
-- **schema.sql**: Database schema definition.
-
-### Tests
-- **controller/CycleDetectionControllerTest.java**: Unit tests for `CycleDetectionController`.
-- **integration/CycleDetectionIntegrationTest.java**: Integration tests for cycle detection functionality.
-- **integration/LoginIntegrationTest.java**: Integration tests for login functionality.
-- **repository/TransactionRepositoryTest.java**: Unit tests for `TransactionRepository`.
-- **service/CycleDetectionServiceTest.java**: Unit tests for `CycleDetectionService`.
+### Gateway Service
+- **GatewayServiceApplication.java**: Main class for the API gateway.
+- **application.yml**: Configuration properties for the gateway service.
 
 ## Running the Application
 
@@ -90,9 +113,9 @@ FRAUDDETECTIONSYSTEM
    mvn clean install -s custom-settings.xml
    ```
 
-2. **Run the Application**:
+2. **Start the Services**:
    ```sh
-   mvn spring-boot:run
+   docker-compose up --build
    ```
 
 3. **Access the Web UI**:
@@ -109,6 +132,9 @@ mvn test
 
 The project uses the following dependencies:
 - Spring Boot
+- Spring Cloud Config
+- Spring Cloud Netflix Eureka
+- Spring Cloud Gateway
 - Spring Data JPA
 - Spring Security
 - H2 Database (for testing)
