@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  config-service:
+    build: ./config-service
+    ports:
+      - "8888:8888"
+    networks:
+      - fraud-detection-network
+
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - fraud-detection-network
+
+  gateway-service:
+    build: ./gateway-service
+    ports:
+      - "8080:8080"
+    networks:
+      - fraud-detection-network
+
+  fraud-detection-service:
+    build: ./fraud-detection-service
+    ports:
+      - "8081:8081"
+    networks:
+      - fraud-detection-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+
+networks:
+  fraud-detection-network:
+    driver: bridge
