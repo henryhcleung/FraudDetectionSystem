@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim AS builder
 WORKDIR /app
 
 # Copy the application JAR file to the container
-COPY target/eureka-server-*.jar app.jar
+COPY target/fraud-detection-service-*.jar app.jar
 
 # Extract the layers
 RUN java -Djarmode=layertools -jar app.jar extract
@@ -23,7 +23,7 @@ COPY --from=builder /app/snapshot-dependencies/ ./
 COPY --from=builder /app/application/ ./
 
 # Expose the port the application runs on
-EXPOSE 8761
+EXPOSE 8081
 
 # Run the application
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]

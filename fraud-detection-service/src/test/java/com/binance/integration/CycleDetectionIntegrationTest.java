@@ -1,5 +1,6 @@
 package com.binance.integration;
 
+import com.binance.FraudDetectionServiceApplication;
 import com.binance.model.ListNode;
 import com.binance.service.CycleDetectionService;
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = FraudDetectionServiceApplication.class)
 public class CycleDetectionIntegrationTest {
 
     @Autowired
