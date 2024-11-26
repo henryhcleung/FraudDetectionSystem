@@ -37,8 +37,8 @@ public class CycleDetectionController {
 
     @PostMapping("/transactions")
     public ResponseEntity<Transaction> saveTransaction(@RequestBody Transaction transaction) {
-        cycleDetectionService.saveTransaction(transaction);
-        return ResponseEntity.ok(transaction);
+        Transaction savedTransaction = cycleDetectionService.saveTransaction(transaction);
+        return ResponseEntity.ok(savedTransaction);
     }
 
     @DeleteMapping("/transactions/{id}")
@@ -46,5 +46,4 @@ public class CycleDetectionController {
         cycleDetectionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
-
 }

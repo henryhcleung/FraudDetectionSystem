@@ -1,18 +1,17 @@
 package com.binance.repository;
 
-import com.binance.FraudDetectionServiceApplication;
 import com.binance.model.Transaction;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = FraudDetectionServiceApplication.class)
 @DataJpaTest
+@ActiveProfiles("test")
 public class TransactionRepositoryTest {
 
     @Autowired

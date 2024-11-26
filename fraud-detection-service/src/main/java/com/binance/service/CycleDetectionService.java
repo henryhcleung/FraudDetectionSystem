@@ -41,8 +41,8 @@ public class CycleDetectionService {
         return transactionRepository.findById(id);
     }
 
-    public void saveTransaction(Transaction transaction) {
-        transactionRepository.save(transaction);
+    public Transaction saveTransaction(Transaction transaction) {
+        return transactionRepository.save(transaction);
     }
 
     public void deleteTransaction(Long id) {

@@ -15,7 +15,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // For example, you can load the user from the database
         if ("admin".equals(username)) {
             return User.withUsername("admin")
-                    .password("admin") // NoOpPasswordEncoder expects plain text password
+                    .password("{noop}admin") // NoOpPasswordEncoder expects plain text password
                     .roles("ADMIN")
                     .build();
         } else {
