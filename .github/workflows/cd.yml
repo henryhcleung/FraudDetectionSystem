@@ -72,17 +72,17 @@ jobs:
       - name: Deploy to Kind
         run: |
           kubectl apply -f k8s/configmap.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
-          kubectl apply -f k8s/deployment.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
-          kubectl apply -f k8s/service.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl apply -f k8s/fraud-detection-service-deployment.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
+          kubectl apply -f k8s/fraud-detection-service-service.yaml -n ${{ env.KUBERNETES_NAMESPACE }}
       - name: Wait for deployment
         run: |
-          kubectl rollout status deployment/fraud-detection-system -n ${{ env.KUBERNETES_NAMESPACE }} --timeout=300s
+          kubectl rollout status deployment/fraud-detection-service -n ${{ env.KUBERNETES_NAMESPACE }} --timeout=300s
       - name: Run tests
         run: |
           echo "Running tests..."
           kubectl get pods -n ${{ env.KUBERNETES_NAMESPACE }}
           kubectl get services -n ${{ env.KUBERNETES_NAMESPACE }}
-          kubectl port-forward service/fraud-detection-system 8080:80 -n ${{ env.KUBERNETES_NAMESPACE }} &
+          kubectl port-forward service/fraud-detection-service 8080:80 -n ${{ env.KUBERNETES_NAMESPACE }} &
           sleep 10
           curl -f http://localhost:8080/health || exit 1
 

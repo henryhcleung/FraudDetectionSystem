@@ -1,12 +1,11 @@
-package com.binance;
+package com.binance.fraud;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FraudDetectionSystemApplication {
-
+public class FraudDetectionServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(FraudDetectionSystemApplication.class, args);
+        SpringApplication.run(FraudDetectionServiceApplication.class, args);
     }
 }

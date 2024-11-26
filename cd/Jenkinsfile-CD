@@ -31,10 +31,10 @@ pipeline {
                             export KUBECONFIG=\$(pwd)/kubeconfig
                             kubectl create namespace ${KUBERNETES_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                             kubectl apply -f k8s/configmap.yaml -n ${KUBERNETES_NAMESPACE}
-                            kubectl apply -f k8s/deployment.yaml -n ${KUBERNETES_NAMESPACE}
-                            kubectl apply -f k8s/service.yaml -n ${KUBERNETES_NAMESPACE}
-                            kubectl set image deployment/fraud-detection-system fraud-detection-system=${DOCKER_IMAGE}:${params.DOCKER_TAG} -n ${KUBERNETES_NAMESPACE}
-                            kubectl rollout status deployment/fraud-detection-system -n ${KUBERNETES_NAMESPACE} --timeout=1200s
+                            kubectl apply -f k8s/fraud-detection-service-deployment.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl apply -f k8s/fraud-detection-service-service.yaml -n ${KUBERNETES_NAMESPACE}
+                            kubectl set image deployment/fraud-detection-service fraud-detection-service=${DOCKER_IMAGE}:${params.DOCKER_TAG} -n ${KUBERNETES_NAMESPACE}
+                            kubectl rollout status deployment/fraud-detection-service -n ${KUBERNETES_NAMESPACE} --timeout=1200s
                         """
                     }
                 }
