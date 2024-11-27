@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS TRANSACTIONS (
     details VARCHAR(255)
 );
 
--- Create the users table if it does not exist
+-- Create the users table if it does not exist 
 CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL PRIMARY KEY,
     password VARCHAR(255) NOT NULL UNIQUE,
