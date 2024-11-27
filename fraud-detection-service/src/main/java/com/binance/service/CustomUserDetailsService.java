@@ -1,21 +1,24 @@
 package com.binance.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Implement your user loading logic here
-        // For example, you can load the user from the database
         if ("admin".equals(username)) {
             return User.withUsername("admin")
-                    .password("{noop}admin") // NoOpPasswordEncoder expects plain text password
+                    .password(passwordEncoder.encode("admin"))
                     .roles("ADMIN")
                     .build();
         } else {

@@ -1,6 +1,5 @@
 package com.binance.config;
 
-import com.binance.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,24 +17,25 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(new AntPathRequestMatcher("/public/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/public/**")).permitAll()
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form.loginPage("/login").permitAll())
+            .formLogin(form -> form
+                .loginPage("/login")
+                .permitAll()
+                .defaultSuccessUrl("/home", true)
+            )
             .logout(logout -> logout.permitAll())
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for H2 console access
-            .headers(headers -> headers.frameOptions().disable()); // Allow H2 console to be displayed in a frame
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
+            )
+            .headers(headers -> headers.frameOptions().disable());
         return http.build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public CustomUserDetailsService customUserDetailsService() {
-        return new CustomUserDetailsService();
     }
 }

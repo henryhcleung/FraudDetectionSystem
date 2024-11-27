@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
+        <version>3.1.6</version>
         <relativePath/>
     </parent>
 
@@ -22,6 +22,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
         <spring-cloud.version>2022.0.4</spring-cloud.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
 
     <dependencyManagement>
@@ -60,12 +62,10 @@
 
     <build>
         <plugins>
-            <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -74,11 +74,10 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
-            <!-- JaCoCo Maven Plugin for Code Coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.8</version>
+                <version>0.8.10</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -95,11 +94,10 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- OWASP Dependency-Check Plugin -->
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>11.1.0</version>
+                <version>8.4.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -108,19 +106,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
-                    <cveValidForHours>24</cveValidForHours>
-                    <connectionTimeout>600000</connectionTimeout> <!-- 10 minutes -->
-                    <retryCount>5</retryCount>
-                    <retryWait>60000</retryWait> <!-- 1 minute -->
-                    <nvd>
-                        <apiKey>${env.NVD_API_KEY}</apiKey>
-                    </nvd>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <format>ALL</format>
                 </configuration>
             </plugin>
-            <!-- Maven Enforcer Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -140,11 +128,10 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Maven Surefire Plugin for Testing -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <version>3.1.2</version>
                 <configuration>
                     <parallel>classes</parallel>
                     <threadCount>8</threadCount>
@@ -175,6 +162,5 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Other dependencies -->
     </dependencies>
 </project>
