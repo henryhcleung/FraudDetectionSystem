@@ -87,7 +87,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=henryhcleung_FraudDetectionSystem -s custom-settings.xml
+          SONAR_ORGANIZATION: 'your-sonar-organization' # Add this line
+        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=henryhcleung_FraudDetectionSystem -Dsonar.organization=${{ env.SONAR_ORGANIZATION }} -s custom-settings.xml
 
   security-scan:
     needs: analyze
