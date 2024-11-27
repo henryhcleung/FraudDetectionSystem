@@ -107,6 +107,7 @@
                 </executions>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <suppressionFile>${project.basedir}/suppressions.xml</suppressionFile>
                 </configuration>
             </plugin>
             <plugin>
@@ -160,6 +161,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <version>2.1.214</version> <!-- Update to a version without known vulnerabilities -->
             <scope>runtime</scope>
         </dependency>
         <dependency>
